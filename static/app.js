@@ -1646,19 +1646,29 @@ function openNewPartyModal() {
 }
 
 async function openMobileAppModal() {
-  try {
-    const res = await fetch(`${API_BASE}/network-info`);
-    const info = await res.json();
-    const qrImg = document.getElementById("mobile-qr-code");
-    const urlDisplay = document.getElementById("mobile-url-display");
-    if (qrImg && info.mobile_url) {
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(info.mobile_url)}`;
+  const qrImg = document.getElementById("mobile-qr-code");
+  const urlDisplay = document.getElementById("mobile-url-display");
+
+  // Als we op een online server zitten (zoals onrender.com), gebruik direct het actieve domein!
+  const isCloud = window.location.hostname !== "127.0.0.1" && window.location.hostname !== "localhost";
+  let mobileUrl = `${window.location.origin}/mobile`;
+
+  if (!isCloud) {
+    try {
+      const res = await fetch(`${API_BASE}/network-info`);
+      const info = await res.json();
+      if (info.mobile_url) mobileUrl = info.mobile_url;
+    } catch (err) {
+      console.warn("Kon netwerk info niet automatisch ophalen:", err);
     }
-    if (urlDisplay && info.mobile_url) {
-      urlDisplay.textContent = info.mobile_url;
-    }
-  } catch (err) {
-    console.warn("Kon netwerk info niet automatisch ophalen:", err);
+  }
+
+  if (qrImg) {
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mobileUrl)}`;
+  }
+  if (urlDisplay) {
+    urlDisplay.textContent = mobileUrl;
+    urlDisplay.href = mobileUrl;
   }
   document.getElementById("modal-mobile-app").classList.remove("hidden");
 }
