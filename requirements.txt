@@ -1,0 +1,2 @@
+# Transito TMS is built 100% on Python Standard Library
+# Zero external packages required for maximum reliability and speed.

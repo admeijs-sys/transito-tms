@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transito - Transport Intermediair & SDI Facturatie</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-slate-200 flex flex-col shrink-0 border-r border-slate-800">
+      <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+          <i class="fa-solid fa-handshake-simple text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base tracking-tight text-white leading-tight">Transito</h1>
+          <span class="text-xs text-blue-400 font-medium">Transport Intermediair</span>
+        </div>
+      </div>
+
+      <!-- Partner Badge in Sidebar -->
+      <div class="px-4 py-3 bg-slate-950/60 border-b border-slate-800/80">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Optredend namens vervoerder:</span>
+        <div id="sidebar-principal-name" class="text-xs font-semibold text-emerald-400 truncate">Veldhoven Transport B.V.</div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active">
+          <i class="fa-solid fa-chart-pie w-5"></i>
+          <span>Dashboard</span>
+        </button>
+        <button onclick="switchTab('orders')" id="nav-orders" class="nav-btn">
+          <i class="fa-solid fa-clipboard-list w-5"></i>
+          <span>Bemiddelde Opdrachten</span>
+          <span id="badge-active-orders" class="ml-auto bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full font-semibold">0</span>
+        </button>
+        <button onclick="switchTab('invoices')" id="nav-invoices" class="nav-btn">
+          <i class="fa-solid fa-file-invoice-dollar w-5"></i>
+          <span>Commissiefacturen (SDI)</span>
+        </button>
+        <button onclick="switchTab('accounting')" id="nav-accounting" class="nav-btn">
+          <i class="fa-solid fa-calculator w-5"></i>
+          <span>Boekhouding & Fisco</span>
+          <span class="ml-auto bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded font-mono font-medium">Italiaans</span>
+        </button>
+        <button onclick="switchTab('parties')" id="nav-parties" class="nav-btn">
+          <i class="fa-solid fa-building w-5"></i>
+          <span>Verladers (Klanten)</span>
+        </button>
+        <button onclick="switchTab('principal')" id="nav-principal" class="nav-btn">
+          <i class="fa-solid fa-truck-front w-5"></i>
+          <span>Partner Vervoerder</span>
+        </button>
+        <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn">
+          <i class="fa-solid fa-sliders w-5"></i>
+          <span>Mijn Bedrijf & SDI</span>
+        </button>
+      </nav>
+
+      <!-- Bottom Company Pill -->
+      <div class="p-4 border-t border-slate-800 bg-slate-950/40">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs border border-blue-500/30">
+            IT
+          </div>
+          <div class="truncate">
+            <div id="sidebar-company-name" class="text-xs font-semibold text-slate-200 truncate">Transito Intermediazioni S.r.l.</div>
+            <div id="sidebar-vat-number" class="text-[11px] text-slate-400 font-mono">P.IVA: IT09876543210</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <!-- Top Header -->
+      <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0 shadow-sm">
+        <div class="flex items-center gap-4">
+          <h2 id="page-title" class="text-xl font-bold text-slate-800">Dashboard</h2>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+            Intermediair & Makelaarsmodel
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="lockApp()" title="Vergrendel Dashboard" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 text-xs font-medium px-3 py-2 rounded-lg transition-colors border border-slate-300">
+            <i class="fa-solid fa-lock text-slate-500"></i>
+            <span>Vergrendelen</span>
+          </button>
+          <button onclick="openMobileAppModal()" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium px-3.5 py-2 rounded-lg transition-colors border border-slate-300">
+            <i class="fa-solid fa-mobile-screen-button text-blue-600 text-sm"></i>
+            <span>Telefoon App</span>
+          </button>
+          <button onclick="openNewOrderModal()" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors shadow-sm shadow-blue-500/20">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>Nieuwe Bemiddeling</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Tab Content Container -->
+      <main class="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/60">
+
+        <!-- =================== TAB 1: DASHBOARD =================== -->
+        <section id="tab-dashboard" class="space-y-6">
+          <!-- KPI Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Totale Commissie (Netto Omzet) -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex items-start justify-between">
+              <div>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Verdiende Bemiddelingsfee</p>
+                <h3 id="stat-commission" class="text-2xl font-bold text-emerald-600 mt-1">€ 0,00</h3>
+                <span class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                  <i class="fa-solid fa-wallet text-emerald-500"></i> Jouw provisie-omzet
+                </span>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-sack-dollar"></i>
+              </div>
+            </div>
+
+            <!-- Bemiddeld Vrachtvolume -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex items-start justify-between">
+              <div>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Bemiddeld Vrachtvolume</p>
+                <h3 id="stat-volume" class="text-2xl font-bold text-slate-900 mt-1">€ 0,00</h3>
+                <span class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                  <i class="fa-solid fa-truck text-blue-500"></i> Gefactureerd door vervoerder
+                </span>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-route"></i>
+              </div>
+            </div>
+
+            <!-- Nog te Factureren Provisies -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex items-start justify-between">
+              <div>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Te Factureren Provisie</p>
+                <h3 id="stat-unbilled" class="text-2xl font-bold text-blue-600 mt-1">€ 0,00</h3>
+                <span class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                  Klaar voor SDI commissiefactuur
+                </span>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-file-invoice"></i>
+              </div>
+            </div>
+
+            <!-- SDI Status -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex items-start justify-between">
+              <div>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Commissiefacturen (SDI)</p>
+                <h3 id="stat-sdi-invoices" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                <span class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                  Aan het partner-transportbedrijf
+                </span>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-paper-plane"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Explanation Banner & Principal Widget -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Intermediary Protocol Info -->
+            <div class="lg:col-span-2 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 rounded-2xl p-6 text-white shadow-md relative overflow-hidden flex flex-col justify-between">
+              <div class="relative z-10">
+                <span class="px-2.5 py-1 rounded bg-blue-500/30 text-blue-200 text-xs font-semibold uppercase tracking-wider border border-blue-400/30">
+                  Bedrijfsmodel: Intermediair / Makelaar namens Vervoerder
+                </span>
+                <h3 class="text-xl font-bold mt-2">Zuivere Bemiddeling & Automatische Provisiefacturatie</h3>
+                <p class="text-slate-300 text-sm mt-1.5 leading-relaxed">
+                  Jouw Italiaanse onderneming treedt op als bemiddelaar/makelaar voor 
+                  <strong id="banner-principal-name" class="text-emerald-400">Veldhoven International Transport B.V.</strong>. 
+                  Het transportbedrijf verzorgt en factureert de fysieke ritten aan de verladers. Jij brengt voor elke bemiddelde rit automatisch een 
+                  <strong>bemiddelingscommissie (*provvigione*)</strong> in rekening bij het transportbedrijf via het Italiaanse SDI (Art. 7-ter / Btw-verlegd naar Nederland of Art. 9 DPR 633/72).
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-3 mt-4 relative z-10">
+                <button onclick="switchTab('orders')" class="bg-white text-slate-900 hover:bg-slate-100 text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors shadow-sm">
+                  <i class="fa-solid fa-list-check mr-1 text-blue-600"></i> Bekijk Bemiddelde Ritten
+                </button>
+                <button onclick="generateBatchCommissionInvoice()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg border border-blue-400/40 transition-colors shadow-sm">
+                  <i class="fa-solid fa-file-invoice mr-1"></i> Maak Verzamel-Commissiefactuur (SDI)
+                </button>
+              </div>
+            </div>
+
+            <!-- Principal Transport Company Quick Card -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Vaste Vervoerder</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Actieve Partner</span>
+                </div>
+                <h4 id="dash-prin-name" class="text-base font-bold text-slate-900 mt-3 truncate">Veldhoven Transport B.V.</h4>
+                <div class="space-y-1.5 mt-2 text-xs text-slate-600">
+                  <div class="flex justify-between">
+                    <span class="text-slate-400">Land & Status:</span>
+                    <span id="dash-prin-country" class="font-semibold text-slate-800">Nederland (Art. 7-ter)</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-400">Btw-nummer:</span>
+                    <span id="dash-prin-vat" class="font-mono font-medium text-slate-800">NL854729381B01</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-400">Afgesproken Provisie:</span>
+                    <span id="dash-prin-rate" class="font-bold text-emerald-600">10.0% per rit</span>
+                  </div>
+                  <div class="flex justify-between pt-2 border-t border-slate-100">
+                    <span class="text-slate-700 font-semibold">Openstaand Saldo:</span>
+                    <span id="dash-prin-unbilled" class="font-bold text-blue-600 font-mono">€ 0,00</span>
+                  </div>
+                </div>
+              </div>
+              <button onclick="switchTab('principal')" class="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition text-center">
+                Vervoerder Gegevens Wijzigen <i class="fa-solid fa-arrow-right ml-1 text-slate-400"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bemiddelings Pijplijn (Pipeline Tracker) -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-sm">
+            <h4 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-timeline text-blue-600"></i> Bemiddelings- en Facturatiepijplijn
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-[11px] font-semibold text-slate-500 block">1. Aangemeld</span>
+                <div class="text-lg font-bold text-slate-800 mt-0.5" id="pipe-aangemeld">0 ritten</div>
+                <span class="text-[10px] text-slate-400">Wacht op ritbevestiging</span>
+              </div>
+              <div class="bg-amber-50/60 p-3 rounded-xl border border-amber-200">
+                <span class="text-[11px] font-semibold text-amber-700 block">2. Onderweg / Gepland</span>
+                <div class="text-lg font-bold text-amber-800 mt-0.5" id="pipe-actief">0 ritten</div>
+                <span class="text-[10px] text-amber-600">Vrachtwagens onderweg</span>
+              </div>
+              <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-200">
+                <span class="text-[11px] font-semibold text-blue-700 block">3. Geleverd & Te Factureren</span>
+                <div class="text-lg font-bold text-blue-800 mt-0.5" id="pipe-te-factureren">0 ritten</div>
+                <span class="text-[10px] text-blue-600 font-mono font-medium" id="pipe-te-factureren-bedrag">€ 0,00 provisie</span>
+              </div>
+              <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200">
+                <span class="text-[11px] font-semibold text-emerald-700 block">4. Commissie Gefactureerd</span>
+                <div class="text-lg font-bold text-emerald-800 mt-0.5" id="pipe-gefactureerd">0 ritten</div>
+                <span class="text-[10px] text-emerald-600 font-mono font-medium" id="pipe-gefactureerd-bedrag">€ 0,00 gefactureerd</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts: Volume vs Provisie & Top Verladers -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-200/90 shadow-sm">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div>
+                  <h4 class="font-bold text-slate-800 text-sm">Bemiddeld Vrachtvolume vs. Jouw Provisie</h4>
+                  <p class="text-xs text-slate-500">Overzicht per bemiddelde rit</p>
+                </div>
+                <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                  10% Gemiddelde Fee
+                </span>
+              </div>
+              <div class="h-64 relative">
+                <canvas id="chart-volume-commission"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="pb-3 border-b border-slate-100 mb-4">
+                  <h4 class="font-bold text-slate-800 text-sm">Top Verladers (Vrachtaandeel)</h4>
+                  <p class="text-xs text-slate-500">Verdeling van het bemiddelde volume</p>
+                </div>
+                <div class="h-48 relative flex items-center justify-center">
+                  <canvas id="chart-clients-share"></canvas>
+                </div>
+              </div>
+              <div id="chart-clients-legend" class="mt-3 space-y-1 text-xs">
+                <!-- Dynamisch gevulde legenda -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Orders Preview -->
+          <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h4 class="font-bold text-slate-800 text-base">Actuele Bemiddelingen</h4>
+                <p class="text-xs text-slate-500">Overzicht van opdrachten die je namens het transportbedrijf hebt geregeld</p>
+              </div>
+              <button onclick="switchTab('orders')" class="text-xs font-semibold text-blue-600 hover:text-blue-800">
+                Alles bekijken <i class="fa-solid fa-arrow-right ml-1"></i>
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50/80 text-xs uppercase font-semibold text-slate-500 border-b border-slate-100">
+                  <tr>
+                    <th class="py-3 px-4">Dossier #</th>
+                    <th class="py-3 px-4">Verlader (Opdrachtgever)</th>
+                    <th class="py-3 px-4">Traject</th>
+                    <th class="py-3 px-4">Status</th>
+                    <th class="py-3 px-4 text-right">Vrachttarief Verlader</th>
+                    <th class="py-3 px-4 text-right">Jouw Provisie</th>
+                    <th class="py-3 px-4 text-center">Commissie Factuur</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-recent-orders" class="divide-y divide-slate-100 font-normal text-slate-700">
+                  <!-- Wordt dynamisch geladen -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- =================== TAB 2: BEMIDDELDE OPDRACHTEN =================== -->
+        <section id="tab-orders" class="hidden space-y-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">Bemiddelde Vrachten & Opdrachten</h3>
+              <p class="text-xs text-slate-500">Overzicht van alle vrachtopdrachten geworven voor het transportbedrijf</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="order-search" oninput="filterOrders()" placeholder="Zoek op rit, stad, CMR of verlader..." class="text-xs pl-8 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-64 bg-white shadow-sm">
+              </div>
+              <button onclick="generateBatchCommissionInvoice()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-file-invoice"></i> Verzamel-Factuur
+              </button>
+              <button onclick="openNewOrderModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-plus"></i> Nieuwe Bemiddeling
+              </button>
+            </div>
+          </div>
+
+          <!-- Orders Table Card -->
+          <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
+                  <tr>
+                    <th class="py-3.5 px-4">Dossier #</th>
+                    <th class="py-3.5 px-4">Verlader (Opdrachtgever)</th>
+                    <th class="py-3.5 px-4">Route (Van &rarr; Naar)</th>
+                    <th class="py-3.5 px-4">Lading & CMR</th>
+                    <th class="py-3.5 px-4">Status</th>
+                    <th class="py-3.5 px-4 text-right">Vrachtprijs Verlader</th>
+                    <th class="py-3.5 px-4 text-right">Jouw Commissie</th>
+                    <th class="py-3.5 px-4 text-center">Facturatie SDI</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-table-body" class="divide-y divide-slate-100 text-slate-700">
+                  <!-- Wordt dynamisch gevuld -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- =================== TAB 3: COMMISSIEFACTUREN (SDI) =================== -->
+        <section id="tab-invoices" class="hidden space-y-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">Commissiefacturen & Factuursjablonen</h3>
+              <p class="text-xs text-slate-500">Officiële SDI FatturaPA FPR12 XML & professionele A4 factuursjablonen (Copia di Cortesia / PDF)</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openDraftInvoiceModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-file-circle-plus"></i> + Factuur Opmaken
+              </button>
+              <button onclick="generateBatchCommissionInvoice()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-receipt"></i> Factureer Alle Openstaande Provisies
+              </button>
+            </div>
+          </div>
+
+          <!-- Invoices Table Card -->
+          <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
+                  <tr>
+                    <th class="py-3.5 px-4">Factuurnummer</th>
+                    <th class="py-3.5 px-4">Gefactureerd Transportbedrijf</th>
+                    <th class="py-3.5 px-4">Datum</th>
+                    <th class="py-3.5 px-4 text-right">Commissiebedrag</th>
+                    <th class="py-3.5 px-4 text-center">Btw / Fiscale Code</th>
+                    <th class="py-3.5 px-4 text-right">Totaal Factuur</th>
+                    <th class="py-3.5 px-4 text-center">SDI Status</th>
+                    <th class="py-3.5 px-4 text-center">Acties</th>
+                  </tr>
+                </thead>
+                <tbody id="invoices-table-body" class="divide-y divide-slate-100 text-slate-700">
+                  <!-- Wordt dynamisch gevuld -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- =================== TAB 3B: ITALIAANSE BOEKHOUDING & BELASTINGEN =================== -->
+        <section id="tab-accounting" class="hidden space-y-6">
+          <!-- Accounting Header & Sub-Navigation -->
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-calculator text-blue-600"></i> Boekhouding & Fiscale Module
+              </h3>
+              <p class="text-xs text-slate-500">Conform de Italiaanse wetgeving, OIC-normen, artt. 2424-2425 Burgerlijk Wetboek en btw-registers (DPR 633/1972)</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openNewExpenseModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-receipt"></i> + Kostenfactuur Invoeren
+              </button>
+            </div>
+          </div>
+
+          <!-- Accounting Sub-tabs -->
+          <div class="flex border-b border-slate-200 gap-2 overflow-x-auto">
+            <button onclick="switchAccountingSubTab('acc-conto')" id="subnav-acc-conto" class="px-4 py-2.5 text-xs font-bold border-b-2 border-blue-600 text-blue-600 flex items-center gap-2 shrink-0">
+              <i class="fa-solid fa-chart-column"></i> Winst- & Verliesrekening & Balans
+            </button>
+            <button onclick="switchAccountingSubTab('acc-lipe')" id="subnav-acc-lipe" class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 shrink-0">
+              <i class="fa-solid fa-landmark"></i> Btw-Afrekening & F24 (LIPE)
+            </button>
+            <button onclick="switchAccountingSubTab('acc-acquisti')" id="subnav-acc-acquisti" class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 shrink-0">
+              <i class="fa-solid fa-file-invoice"></i> Inkoop- & Kostenregister (*IVA Acquisti*)
+            </button>
+            <button onclick="switchAccountingSubTab('acc-piano')" id="subnav-acc-piano" class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 shrink-0">
+              <i class="fa-solid fa-list-ol"></i> Rekeningschema (*Piano dei Conti*)
+            </button>
+          </div>
+
+          <!-- SUB-VIEW 1: WINST- EN VERLIESREKENING & BALANS -->
+          <div id="subtab-acc-conto" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              <!-- Winst- en Verliesrekening (Conto Economico ex art. 2425 c.c.) -->
+              <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm">Winst- en Verliesrekening (*Conto Economico*)</h4>
+                    <span class="text-[11px] text-slate-400 font-mono">Conform art. 2425 Italiaans Burgerlijk Wetboek (c.c.)</span>
+                  </div>
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">Lopend Boekjaar</span>
+                </div>
+
+                <div class="space-y-2.5 text-xs text-slate-700">
+                  <!-- A. Bedrijfsopbrengsten -->
+                  <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200/60 flex justify-between items-center font-semibold">
+                    <span class="text-slate-900">A) Bedrijfsopbrengsten (Verdiende bemiddelingsprovisies)</span>
+                    <span id="ce-ricavi" class="text-sm font-bold text-slate-900 font-mono">€ 0,00</span>
+                  </div>
+
+                  <!-- B. Bedrijfskosten -->
+                  <div class="pl-2 space-y-1.5 border-l-2 border-slate-200">
+                    <div class="flex justify-between text-slate-600">
+                      <span>&bull; B.7 Kosten voor zakelijke diensten (Boekhouder, software, telecom)</span>
+                      <span id="ce-costi-servizi" class="font-mono">€ 0,00</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                      <span>&bull; B.8 Huisvesting & huur kantoor (*Godimento beni terzi*)</span>
+                      <span id="ce-costi-godimento" class="font-mono">€ 0,00</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                      <span>&bull; B.14 Overige bedrijfslasten (Bankkosten, heffingen)</span>
+                      <span id="ce-oneri-diversi" class="font-mono">€ 0,00</span>
+                    </div>
+                  </div>
+
+                  <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200/60 flex justify-between items-center font-semibold text-slate-700">
+                    <span>Totale Bedrijfskosten (B)</span>
+                    <span id="ce-totale-costi" class="text-sm font-bold text-red-600 font-mono">€ 0,00</span>
+                  </div>
+
+                  <!-- Bedrijfsresultaat vóór belasting -->
+                  <div class="p-3 bg-blue-50/70 rounded-xl border border-blue-200 flex justify-between items-center">
+                    <div>
+                      <span class="font-bold text-blue-950 text-xs block">Bedrijfsresultaat vóór belasting (A - B)</span>
+                      <span class="text-[10px] text-blue-700">Bruto operationeel resultaat (EBITDA / MOL)</span>
+                    </div>
+                    <span id="ce-ebitda" class="text-base font-bold text-blue-900 font-mono">€ 0,00</span>
+                  </div>
+
+                  <!-- Belastingen -->
+                  <div class="pl-2 space-y-1 border-l-2 border-amber-300">
+                    <div class="flex justify-between text-slate-600">
+                      <span>IRES (Italiaanse Vennootschapsbelasting - 24%)</span>
+                      <span id="ce-ires" class="font-mono text-amber-700">€ 0,00</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600">
+                      <span>IRAP (Regionale Bedrijfsbelasting Italië - 3,9%)</span>
+                      <span id="ce-irap" class="font-mono text-amber-700">€ 0,00</span>
+                    </div>
+                  </div>
+
+                  <!-- Nettowinst -->
+                  <div class="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 flex justify-between items-center">
+                    <div>
+                      <span class="font-bold text-emerald-950 text-sm block">Nettowinst over het Boekjaar (*Utile Netto*)</span>
+                      <span class="text-[10px] text-emerald-700">Zuivere winst na aftrek van alle bedrijfskosten en Italiaanse belastingen</span>
+                    </div>
+                    <span id="ce-utile-netto" class="text-lg font-bold text-emerald-700 font-mono">€ 0,00</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Balans (Stato Patrimoniale ex art. 2424 c.c.) -->
+              <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm">Balans (*Stato Patrimoniale*)</h4>
+                    <span class="text-[11px] text-slate-400 font-mono">Conform art. 2424 Italiaans Burgerlijk Wetboek (c.c.)</span>
+                  </div>
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">In Evenwicht</span>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                  <!-- ACTIVA -->
+                  <div class="space-y-1.5">
+                    <span class="font-bold text-slate-900 uppercase text-[11px] tracking-wider block">ACTIVA (*Attivo*)</span>
+                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200/60 space-y-1">
+                      <div class="flex justify-between text-slate-700">
+                        <span>Liquide middelen (Zakelijke bankrekening Bolzano)</span>
+                        <span id="sp-banca" class="font-mono font-semibold">€ 0,00</span>
+                      </div>
+                      <div class="flex justify-between text-slate-700">
+                        <span>Te ontvangen provisies (Vorderingen op transportbedrijf)</span>
+                        <span id="sp-crediti" class="font-mono font-semibold">€ 0,00</span>
+                      </div>
+                      <div class="flex justify-between text-slate-700">
+                        <span>Te verrekenen btw-tegoed / Voorbelasting</span>
+                        <span id="sp-credito-iva" class="font-mono font-semibold">€ 0,00</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- PASSIVA & EIGEN VERMOGEN -->
+                  <div class="space-y-1.5 pt-2">
+                    <span class="font-bold text-slate-900 uppercase text-[11px] tracking-wider block">PASSIVA & EIGEN VERMOGEN (*Passivo e Patrimonio*)</span>
+                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200/60 space-y-1">
+                      <div class="flex justify-between text-slate-700">
+                        <span>Gestort Aandelenkapitaal (*Wettelijke eis expediteur*)</span>
+                        <span id="sp-capitale" class="font-mono font-semibold">€ 100.000,00</span>
+                      </div>
+                      <div class="flex justify-between text-slate-700">
+                        <span>Lopende Bedrijfswinst (*Utile d'Esercizio*)</span>
+                        <span id="sp-utile" class="font-mono font-semibold text-emerald-600">€ 0,00</span>
+                      </div>
+                      <div class="flex justify-between text-slate-700">
+                        <span>Crediteuren (Te betalen leveranciersfacturen)</span>
+                        <span id="sp-debiti-fornitori" class="font-mono font-semibold">€ 0,00</span>
+                      </div>
+                      <div class="flex justify-between text-slate-700">
+                        <span>Belastingreserve Vennootschapsbelasting (IRES & IRAP)</span>
+                        <span id="sp-debiti-tributari" class="font-mono font-semibold text-amber-700">€ 0,00</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- SUB-VIEW 2: BTW-AFREKENING & MODELLO F24 -->
+          <div id="subtab-acc-lipe" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              <!-- BTW Afrekening Kaart -->
+              <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm">Periodieke Btw-Afrekening (*Liquidazione Periodica IVA - LIPE*)</h4>
+                    <p class="text-xs text-slate-500">Periodieke Italiaanse btw-berekening conform art. 1 DPR 100/1998</p>
+                  </div>
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">Kwartaal / Maand</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <!-- IVA a debito -->
+                  <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-200">
+                    <span class="text-xs font-bold text-blue-900 block">Verschuldigde Btw (Op Verkopen)</span>
+                    <span class="text-[11px] text-blue-700 block mt-0.5">Uit uitgaande facturen (22%)</span>
+                    <div id="lipe-iva-debito" class="text-xl font-bold font-mono text-blue-900 mt-2">€ 0,00</div>
+                    <span class="text-[10px] text-slate-500 mt-1 block">Art. 7-ter provisies aan EU vervoerder zijn 0% (btw-verlegd)</span>
+                  </div>
+
+                  <!-- IVA a credito -->
+                  <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200">
+                    <span class="text-xs font-bold text-emerald-900 block">Aftrekbare Btw (Voorbelasting op Inkopen)</span>
+                    <span class="text-[11px] text-emerald-700 block mt-0.5">Aftrekbare btw op zakelijke bedrijfskosten</span>
+                    <div id="lipe-iva-credito" class="text-xl font-bold font-mono text-emerald-900 mt-2">€ 0,00</div>
+                    <span class="text-[10px] text-slate-500 mt-1 block">Uit Inkoop- en Kostenregister (*Registro Acquisti*)</span>
+                  </div>
+                </div>
+
+                <!-- Saldo IVA -->
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span class="font-bold text-slate-800 text-xs block">Eindresultaat Btw-Aangifte</span>
+                    <span id="lipe-saldo-type" class="text-xs font-semibold text-emerald-600">Btw-tegoed (Geen btw af te dragen)</span>
+                  </div>
+                  <div id="lipe-saldo-bedrag" class="text-2xl font-bold font-mono text-slate-900">€ 0,00</div>
+                </div>
+              </div>
+
+              <!-- Modello F24 Simulator -->
+              <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center gap-2 pb-3 border-b border-slate-100 mb-3">
+                    <i class="fa-solid fa-file-shield text-blue-600"></i>
+                    <h4 class="font-bold text-slate-800 text-sm">Modello F24 Belastingaangifte</h4>
+                  </div>
+                  <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+                    Italiaans digitaal betaalformulier voor de belastingdienst (*Agenzia delle Entrate*) voor afdracht van btw en vennootschapsbelasting.
+                  </p>
+
+                  <div class="bg-slate-900 text-slate-200 p-4 rounded-xl font-mono text-xs space-y-2">
+                    <div class="text-[11px] text-slate-400 border-b border-slate-800 pb-1 flex justify-between">
+                      <span>SEZIONE ERARIO</span>
+                      <span>F24 DIGITAAL</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-slate-400">Belastingcode (*Tributo*):</span>
+                      <span id="f24-tributo" class="text-amber-400 font-bold">6031 (Btw 1e kwartaal)</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-slate-400">Belastingjaar:</span>
+                      <span class="text-white font-bold">2026</span>
+                    </div>
+                    <div class="flex justify-between pt-1 border-t border-slate-800">
+                      <span class="text-slate-400">Te Betalen Bedrag:</span>
+                      <span id="f24-importo" class="text-emerald-400 font-bold">€ 0,00</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+                  <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i> Betaling verloopt via de bankrekening van het bedrijf met F24 via internetbankieren of via de commercialista.
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- SUB-VIEW 3: INKOOP- EN KOSTENREGISTER -->
+          <div id="subtab-acc-acquisti" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+              <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h4 class="font-bold text-slate-800 text-sm">Inkoop- en Kostenregister (*Registro IVA Acquisti*)</h4>
+                  <p class="text-xs text-slate-500">Wettelijk Italiaans inkoopregister conform art. 25 DPR 633/1972</p>
+                </div>
+                <button onclick="openNewExpenseModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-plus"></i> Nieuwe Kostenfactuur Invoeren
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
+                    <tr>
+                      <th class="py-3 px-4">Datum</th>
+                      <th class="py-3 px-4">Leverancier</th>
+                      <th class="py-3 px-4">Factuurnummer</th>
+                      <th class="py-3 px-4">Omschrijving & Kostenpost</th>
+                      <th class="py-3 px-4 text-right">Bedrag Excl.</th>
+                      <th class="py-3 px-4 text-center">Btw %</th>
+                      <th class="py-3 px-4 text-right">Btw Aftrekbaar</th>
+                      <th class="py-3 px-4 text-right">Totaal Incl.</th>
+                      <th class="py-3 px-4 text-center">Betaalstatus</th>
+                      <th class="py-3 px-4 text-center">Actie</th>
+                    </tr>
+                  </thead>
+                  <tbody id="expenses-table-body" class="divide-y divide-slate-100 text-slate-700 text-xs">
+                    <!-- Wordt dynamisch geladen -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-VIEW 4: REKENINGSCHEMA -->
+          <div id="subtab-acc-piano" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5">
+              <div class="pb-3 border-b border-slate-100 mb-4">
+                <h4 class="font-bold text-slate-800 text-sm">Rekeningschema (*Piano dei Conti*)</h4>
+                <p class="text-xs text-slate-500">Afgestemd op de Italiaanse OIC-standaarden voor transportintermediairs en makelaars</p>
+              </div>
+
+              <div id="piano-dei-conti-list" class="divide-y divide-slate-100 text-xs">
+                <!-- Dynamisch gevuld -->
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- =================== TAB 4: VERLADERS (KLANTEN) =================== -->
+        <section id="tab-parties" class="hidden space-y-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">Verladers & Opdrachtgevers</h3>
+              <p class="text-xs text-slate-500">Bedrijven en fabrieken voor wie je transporten organiseert en bemiddelt</p>
+            </div>
+            <button onclick="openNewPartyModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-plus"></i> Nieuwe Verlader Toevoegen
+            </button>
+          </div>
+
+          <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5">
+            <div id="clients-list" class="divide-y divide-slate-100 space-y-2">
+              <!-- Wordt dynamisch geladen -->
+            </div>
+          </div>
+        </section>
+
+
+        <!-- =================== TAB 5: PARTNER VERVOERDER (PRINCIPAL) =================== -->
+        <section id="tab-principal" class="hidden space-y-6">
+          <div class="max-w-3xl bg-white rounded-xl border border-slate-200/80 shadow-sm p-6">
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100 mb-5">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-truck-moving"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-slate-800">Partner Transportbedrijf (De Principal)</h3>
+                <p class="text-xs text-slate-500">De vervoerder namens wie jij optreedt en aan wie jij jouw bemiddelingsprovisies factureert</p>
+              </div>
+            </div>
+
+            <form id="principal-form" onsubmit="savePrincipalSettings(event)" class="space-y-4 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Naam Transportbedrijf *</label>
+                <input type="text" id="prin-name" required class="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-semibold">
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Landcode (bijv. NL) *</label>
+                  <input type="text" id="prin-country" required maxlength="2" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono uppercase font-bold">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Btw-nummer (VIES) *</label>
+                  <input type="text" id="prin-vat" required class="w-full p-2.5 border border-slate-300 rounded-lg font-mono">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2">
+                <div class="col-span-2">
+                  <label class="block font-semibold text-slate-700 mb-1">Adres</label>
+                  <input type="text" id="prin-address" class="w-full p-2.5 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Plaats & Postcode</label>
+                  <input type="text" id="prin-city" class="w-full p-2.5 border border-slate-300 rounded-lg">
+                </div>
+              </div>
+
+              <div class="p-4 bg-emerald-50/60 rounded-xl border border-emerald-200/80 space-y-3 mt-4">
+                <h4 class="font-bold text-emerald-950 text-xs uppercase tracking-wider">Standaard Commissie-Afspraken</h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Type Commissie</label>
+                    <select id="prin-comm-type" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white">
+                      <option value="percentage">Percentage van het Vrachttarief (%)</option>
+                      <option value="fixed">Vaste Fee per bemiddelde rit (€)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Standaard Commissie (%)</label>
+                    <input type="number" id="prin-comm-rate" step="0.5" value="10.0" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono font-bold text-emerald-700">
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-slate-100 flex justify-end">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg shadow-sm">
+                  <i class="fa-solid fa-floppy-disk mr-1.5"></i> Vervoerder Instellingen Opslaan
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+
+        <!-- =================== TAB 6: MIJN BEDRIJF & SDI INSTELLINGEN =================== -->
+        <section id="tab-settings" class="hidden space-y-6">
+          <div class="max-w-4xl bg-white rounded-xl border border-slate-200/80 shadow-sm p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Eigen Intermediair Onderneming (Italië)</h3>
+            <p class="text-xs text-slate-500 mb-6">De fiscale gegevens van jouw Italiaanse onderneming zoals vereist op de FatturaPA XML Header (*CedentePrestatore*)</p>
+
+            <form id="company-form" onsubmit="saveCompanySettings(event)" class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Statutaire Bedrijfsnaam (*Denominazione*)</label>
+                  <input type="text" id="set-name" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Rechtsvorm</label>
+                  <select id="set-legal-form" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg bg-white">
+                    <option value="S.r.l.">S.r.l. (Besloten vennootschap)</option>
+                    <option value="S.r.l.s.">S.r.l.s. (S.r.l. semplificata)</option>
+                    <option value="Ditta Individuale">Ditta Individuale (Eenmanszaak)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Partita IVA (Italiaans Btw-nummer)</label>
+                  <input type="text" id="set-vat" required placeholder="bijv. IT09876543210" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg font-mono">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Codice Fiscale</label>
+                  <input type="text" id="set-cf" required placeholder="09876543210" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg font-mono">
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Adres (*Indirizzo*)</label>
+                  <input type="text" id="set-address" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Postcode</label>
+                    <input type="text" id="set-zip" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Plaats</label>
+                    <input type="text" id="set-city" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Provincie</label>
+                    <input type="text" id="set-province" required placeholder="BZ" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg uppercase">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">PEC E-mail (*Posta Elettronica Certificata*)</label>
+                  <input type="email" id="set-pec" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Eigen SDI Codice Destinatario (7 tekens)</label>
+                  <input type="text" id="set-sdi" maxlength="7" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg font-mono uppercase">
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">IBAN voor Ontvangst van Commissies</label>
+                  <input type="text" id="set-iban" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg font-mono">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">SDI Gateway / Provider</label>
+                  <select id="set-sdi-provider" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg bg-white">
+                    <option value="Aruba / Fatture in Cloud API Gateway">Aruba / Fatture in Cloud API (Aanbevolen)</option>
+                    <option value="TeamSystem Hub API">TeamSystem Hub API</option>
+                    <option value="Direct SDI x509 Web Service">Direct SDI x509 Web Service (Agenzia delle Entrate)</option>
+                    <option value="Lokale XML Export">Lokale XML Export (Handmatige upload)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-slate-100 flex justify-end">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-lg shadow-sm">
+                  <i class="fa-solid fa-floppy-disk mr-1.5"></i> Bedrijfsinstellingen Opslaan
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- E-mail & Factuurverzending (SMTP / Mailkoppeling) -->
+          <div class="max-w-4xl bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 mt-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <i class="fa-solid fa-envelope-circle-check text-blue-600"></i> E-mailkoppeling &amp; Factuurverzending
+                </h3>
+                <p class="text-xs text-slate-500">Configureer jouw eigen mailserver (SMTP, Gmail, Outlook of Aruba PEC) om commissiefacturen en XML-bestanden direct te verzenden</p>
+              </div>
+              <button type="button" onclick="testEmailConnection()" class="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-blue-200 transition shrink-0">
+                <i class="fa-solid fa-paper-plane text-xs"></i> Test E-mail Verbinding
+              </button>
+            </div>
+
+            <form id="smtp-form" onsubmit="saveSmtpSettings(event)" class="space-y-4 text-xs">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="col-span-2">
+                  <label class="block font-semibold text-slate-700 mb-1">Uitgaande Mailserver (SMTP Server)</label>
+                  <input type="text" id="set-smtp-host" placeholder="bijv. smtp.gmail.com of smtps.aruba.it" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Poort &amp; Beveiliging</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="set-smtp-port" placeholder="587" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-center">
+                    <select id="set-smtp-security" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white">
+                      <option value="tls">STARTTLS</option>
+                      <option value="ssl">SSL / TLS</option>
+                      <option value="none">Geen</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Gebruikersnaam / E-mailadres</label>
+                  <input type="text" id="set-smtp-user" placeholder="jouwnaam@bedrijf.com" class="w-full p-2.5 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Wachtwoord / App-specifiek Wachtwoord</label>
+                  <input type="password" id="set-smtp-pass" placeholder="••••••••••••••••" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Afzendernaam op factuurmails</label>
+                  <input type="text" id="set-smtp-sender-name" placeholder="Transito Intermediazioni S.r.l. - Facturatie" class="w-full p-2.5 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Afzender E-mailadres (*From:)</label>
+                  <input type="email" id="set-smtp-sender-email" placeholder="facturatie@transito.it" class="w-full p-2.5 border border-slate-300 rounded-lg">
+                </div>
+              </div>
+
+              <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Standaard Ontvanger (Transportbedrijf)</label>
+                  <input type="email" id="set-principal-email" placeholder="administratie@veldhoventransport.nl" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                  <span class="text-[10px] text-slate-400 block mt-0.5">Hier gaan facturen en provisienota's standaard heen</span>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Kopie (CC) naar Boekhouder (*Commercialista*)</label>
+                  <input type="email" id="set-accountant-email" placeholder="studio.rossi@commercialisti.it" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                  <span class="text-[10px] text-slate-400 block mt-0.5">Optioneel automatische kopie voor de Italiaanse btw-aangifte</span>
+                </div>
+              </div>
+
+              <div class="pt-3 border-t border-slate-100 flex justify-end">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow-sm">
+                  <i class="fa-solid fa-floppy-disk mr-1.5"></i> Mailkoppeling Opslaan
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Pincode & Dashboard Beveiliging Card -->
+          <div class="bg-white rounded-xl border border-slate-200/80 p-6 shadow-sm space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                  <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-800 text-base">App & Dashboard Pincode Beveiliging</h3>
+                  <p class="text-xs text-slate-500">Beveilig toegang tot het dashboard en de mobiele telefoon-app</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <i class="fa-solid fa-lock"></i> Beveiliging Actief
+              </span>
+            </div>
+
+            <form onsubmit="changeAppPin(event)" class="space-y-4 text-xs">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Huidige Pincode *</label>
+                  <input type="password" id="pin-current" required placeholder="••••" maxlength="12" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-center text-sm">
+                  <span class="text-[10px] text-slate-400 block mt-0.5">Standaard pincode is: 2026</span>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Nieuwe Pincode *</label>
+                  <input type="password" id="pin-new" required placeholder="••••" maxlength="12" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-center text-sm">
+                  <span class="text-[10px] text-slate-400 block mt-0.5">Minimaal 4 cijfers of letters</span>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Bevestig Nieuwe Pincode *</label>
+                  <input type="password" id="pin-confirm" required placeholder="••••" maxlength="12" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-center text-sm">
+                </div>
+              </div>
+
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span id="pin-change-msg" class="text-xs font-medium"></span>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg shadow-sm flex items-center gap-1.5">
+                  <i class="fa-solid fa-key"></i> Nieuwe Pincode Opslaan
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL: NIEUWE BEMIDDELING AANMAKEN ================= -->
+  <div id="modal-new-order" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-handshake text-blue-400"></i> Nieuwe Bemiddelingsopdracht Invoeren
+        </h3>
+        <button onclick="closeModal('modal-new-order')" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="order-form" onsubmit="saveNewOrder(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Opdrachtgever / Verlader (*Committente*)</label>
+          <select id="ord-client" required class="w-full p-2.5 border border-slate-300 rounded-lg bg-white">
+            <!-- Dynamisch gevuld -->
+          </select>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <span class="font-bold text-slate-800 text-[11px] uppercase tracking-wider block">Traject & Route</span>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-2">
+              <span class="text-[11px] font-semibold text-blue-700">Laadlocatie (Van)</span>
+              <div class="flex gap-2">
+                <input type="text" id="ord-orig-country" required placeholder="Land (NL)" maxlength="2" class="w-16 p-2 border border-slate-300 rounded font-mono uppercase">
+                <input type="text" id="ord-orig-city" required placeholder="Plaatsnaam" class="flex-1 p-2 border border-slate-300 rounded">
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <span class="text-[11px] font-semibold text-emerald-700">Loslocatie (Naar)</span>
+              <div class="flex gap-2">
+                <input type="text" id="ord-dest-country" required placeholder="Land (IT)" maxlength="2" class="w-16 p-2 border border-slate-300 rounded font-mono uppercase">
+                <input type="text" id="ord-dest-city" required placeholder="Plaatsnaam" class="flex-1 p-2 border border-slate-300 rounded">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Goederen</label>
+            <input type="text" id="ord-goods" placeholder="bijv. Levensmiddelen, Machines" required class="w-full p-2 border border-slate-300 rounded">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Gewicht (kg)</label>
+            <input type="number" id="ord-weight" placeholder="22000" class="w-full p-2 border border-slate-300 rounded font-mono">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">CMR Nummer</label>
+            <input type="text" id="ord-cmr" placeholder="CMR-2026-..." class="w-full p-2 border border-slate-300 rounded font-mono">
+          </div>
+        </div>
+
+        <!-- Flexibele Commissie Berekening van de Intermediair -->
+        <div class="p-4 bg-gradient-to-br from-blue-50/80 to-indigo-50/50 rounded-xl border border-blue-200/90 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-bold text-blue-950 text-xs uppercase tracking-wider block">Commissie & Tariefafspraak</span>
+              <span class="text-[10px] text-slate-500">Kies het gewenste commissiemodel voor deze bemiddeling</span>
+            </div>
+            <span id="ord-calc-display" class="text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded shadow-sm border border-emerald-200 font-mono">
+              Provisie: € 0,00 (10.0%)
+            </span>
+          </div>
+
+          <!-- Commissiemodel Keuzeknoppen -->
+          <div class="grid grid-cols-4 gap-1.5 p-1 bg-white rounded-lg border border-slate-200 text-xs font-semibold">
+            <button type="button" id="btn-mode-pct" onclick="setDesktopCommissionMode('percentage')" class="py-1.5 px-2 rounded-md bg-blue-600 text-white transition-all text-center">
+              <i class="fa-solid fa-percent mr-1"></i> Percentage
+            </button>
+            <button type="button" id="btn-mode-fixed" onclick="setDesktopCommissionMode('fixed')" class="py-1.5 px-2 rounded-md text-slate-600 hover:text-slate-900 transition-all text-center">
+              <i class="fa-solid fa-euro-sign mr-1"></i> Vaste Fee
+            </button>
+            <button type="button" id="btn-mode-margin" onclick="setDesktopCommissionMode('margin')" class="py-1.5 px-2 rounded-md text-slate-600 hover:text-slate-900 transition-all text-center">
+              <i class="fa-solid fa-arrow-right-arrow-left mr-1"></i> Marge / Verschil
+            </button>
+            <button type="button" id="btn-mode-custom" onclick="setDesktopCommissionMode('custom')" class="py-1.5 px-2 rounded-md text-slate-600 hover:text-slate-900 transition-all text-center">
+              <i class="fa-solid fa-pen mr-1"></i> Vrij Bedrag
+            </button>
+          </div>
+          <input type="hidden" id="ord-comm-type" value="percentage">
+
+          <!-- Dynamische Invoervelden -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <!-- Veld 1: Vrachttarief Verlader (altijd zichtbaar) -->
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">
+                Vrachttarief Verlader (€) *
+              </label>
+              <input type="number" id="ord-freight" step="0.01" required placeholder="2450.00" oninput="calcDesktopCommission()" class="w-full p-2.5 border border-slate-300 rounded font-mono font-bold text-slate-900 bg-white shadow-inner">
+              <span class="text-[10px] text-slate-400 block mt-0.5">Bedrag betaald door verlader</span>
+            </div>
+
+            <!-- Veld 2: Afhankelijk van Modus -->
+            <!-- 2A. Percentage modus -->
+            <div id="wrapper-ord-pct">
+              <label class="font-semibold text-slate-700 block mb-1">Commissie Percentage (%)</label>
+              <input type="number" id="ord-comm-rate" step="0.1" value="10.0" oninput="calcDesktopCommission()" class="w-full p-2.5 border border-slate-300 rounded font-mono font-bold text-blue-700 bg-white">
+              <div class="flex gap-1 mt-1">
+                <button type="button" onclick="setDesktopRate(5)" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold text-slate-600 hover:border-blue-500">5%</button>
+                <button type="button" onclick="setDesktopRate(7.5)" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold text-slate-600 hover:border-blue-500">7.5%</button>
+                <button type="button" onclick="setDesktopRate(10)" class="px-1.5 py-0.5 bg-blue-100 border border-blue-300 rounded text-[10px] font-bold text-blue-800">10%</button>
+                <button type="button" onclick="setDesktopRate(12.5)" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold text-slate-600 hover:border-blue-500">12.5%</button>
+                <button type="button" onclick="setDesktopRate(15)" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold text-slate-600 hover:border-blue-500">15%</button>
+              </div>
+            </div>
+
+            <!-- 2B. Vaste Fee modus (hidden by default) -->
+            <div id="wrapper-ord-fixed" class="hidden">
+              <label class="font-semibold text-slate-700 block mb-1">Vaste Fee per Rit (€)</label>
+              <input type="number" id="ord-comm-fixed" step="5" value="200.00" oninput="calcDesktopCommission()" class="w-full p-2.5 border border-slate-300 rounded font-mono font-bold text-purple-700 bg-white">
+              <div class="flex gap-1 mt-1">
+                <button type="button" onclick="setDesktopFixedFee(100)" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold text-slate-600 hover:border-purple-500">€ 100</button>
+                <button type="button" onclick="setDesktopFixedFee(150)" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold text-slate-600 hover:border-purple-500">€ 150</button>
+                <button type="button" onclick="setDesktopFixedFee(200)" class="px-1.5 py-0.5 bg-purple-100 border border-purple-300 rounded text-[10px] font-bold text-purple-800">€ 200</button>
+                <button type="button" onclick="setDesktopFixedFee(250)" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold text-slate-600 hover:border-purple-500">€ 250</button>
+              </div>
+            </div>
+
+            <!-- 2C. Marge / Spread modus (hidden by default) -->
+            <div id="wrapper-ord-margin" class="hidden">
+              <label class="font-semibold text-slate-700 block mb-1">Vervoerderstarief (€) *</label>
+              <input type="number" id="ord-carrier-price" step="0.01" placeholder="2200.00" oninput="calcDesktopCommission()" class="w-full p-2.5 border border-slate-300 rounded font-mono font-bold text-amber-800 bg-white">
+              <span class="text-[10px] text-slate-400 block mt-0.5">Wat de vervoerder minimaal vraagt</span>
+            </div>
+
+            <!-- Veld 3: Netto Provisie (€) -->
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1 flex items-center justify-between">
+                <span>Jouw Provisie (€)</span>
+                <span class="text-[10px] text-emerald-600 font-normal">Direct aanpasbaar</span>
+              </label>
+              <input type="number" id="ord-comm-amount" step="0.01" oninput="onDesktopDirectCommissionInput()" class="w-full p-2.5 border border-emerald-400 bg-emerald-50/70 rounded font-mono font-bold text-emerald-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-sm">
+              <span id="ord-effective-pct-hint" class="text-[10px] text-emerald-700 font-mono block mt-0.5">Effectief: 10.0% marge</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end gap-3">
+          <button type="button" onclick="closeModal('modal-new-order')" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50">
+            Annuleren
+          </button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm">
+            Bemiddeling Opslaan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL: XML INSPECTOR & VIEWER ================= -->
+  <div id="modal-xml-viewer" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div>
+          <h3 id="xml-modal-title" class="font-bold text-base flex items-center gap-2">
+            <i class="fa-solid fa-code text-blue-400"></i> FatturaPA XML Commissiefactuur
+          </h3>
+          <p id="xml-modal-subtitle" class="text-xs text-slate-400">Officiële XML voor het SDI gericht aan het Transportbedrijf</p>
+        </div>
+        <button onclick="closeModal('modal-xml-viewer')" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-1 bg-slate-900 text-slate-200 font-mono text-xs">
+        <pre><code id="xml-content-display" class="block whitespace-pre overflow-x-auto text-emerald-400"></code></pre>
+      </div>
+
+      <div class="px-6 py-4 bg-slate-100 border-t border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-xs text-slate-600">
+          <i class="fa-solid fa-circle-check text-emerald-600"></i>
+          <span>Valide XML-structuur met namespace en verplichte velden</span>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="copyXmlToClipboard()" class="px-3.5 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold hover:bg-white text-slate-700">
+            <i class="fa-solid fa-copy mr-1"></i> Kopiëren
+          </button>
+          <a id="xml-download-link" href="#" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-download"></i> Download .XML Bestand
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL: NIEUWE VERLADER ================= -->
+  <div id="modal-new-party" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-building text-blue-400"></i> Nieuwe Verlader Toevoegen
+        </h3>
+        <button onclick="closeModal('modal-new-party')" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveNewParty(event)" class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Bedrijfsnaam Verlader *</label>
+          <input type="text" id="party-name" required placeholder="bijv. Barilla S.p.A. of Heineken Supply Chain B.V." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Landcode (ISO) *</label>
+            <input type="text" id="party-country" required placeholder="IT, NL, DE..." maxlength="2" class="w-full p-2 border border-slate-300 rounded-lg font-mono uppercase font-bold">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Btw-nummer / P.IVA</label>
+            <input type="text" id="party-vat" placeholder="NL005837264B01" class="w-full p-2 border border-slate-300 rounded-lg font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">E-mailadres / PEC</label>
+            <input type="text" id="party-email" placeholder="logistics@bedrijf.com" class="w-full p-2 border border-slate-300 rounded-lg">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Plaats</label>
+            <input type="text" id="party-city" placeholder="Stad" class="w-full p-2 border border-slate-300 rounded-lg">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end gap-3">
+          <button type="button" onclick="closeModal('modal-new-party')" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50">
+            Annuleren
+          </button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm">
+            Verlader Opslaan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL: NIEUWE KOSTENFACTUUR ================= -->
+  <div id="modal-new-expense" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-receipt text-blue-400"></i> Kostenfactuur Invoeren (*Registro IVA Acquisti*)
+        </h3>
+        <button onclick="closeModal('modal-new-expense')" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="expense-form" onsubmit="saveNewExpense(event)" class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Leverancier (*Fornitore*) *</label>
+          <input type="text" id="exp-supplier" required placeholder="bijv. Studio Commercialista Rossi of Aruba S.p.A." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Partita IVA / Btw Leverancier</label>
+            <input type="text" id="exp-vat" placeholder="IT01234567890" class="w-full p-2 border border-slate-300 rounded-lg font-mono">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Factuurnummer Leverancier</label>
+            <input type="text" id="exp-inv-num" placeholder="FT-2026/..." class="w-full p-2 border border-slate-300 rounded-lg font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Kostencategorie (*Piano dei Conti*) *</label>
+          <select id="exp-account" required class="w-full p-2.5 border border-slate-300 rounded-lg bg-white">
+            <option value="5001">5001 - Kosten Boekhouder & Fiscaal Adviseur (Commercialista)</option>
+            <option value="5002">5002 - Software, PEC en SDI Elektronische Facturatie</option>
+            <option value="5003">5003 - Telefonie- en Internetkosten (80% fiscaal aftrekbaar TUIR)</option>
+            <option value="5004">5004 - Kantoorhuur en Huisvesting</option>
+            <option value="5005">5005 - Reis- en Representatiekosten</option>
+            <option value="5006">5006 - Bankkosten en Betalingsverkeer (Btw-vrijgesteld art. 10)</option>
+            <option value="5007">5007 - Beroepsaansprakelijkheidsverzekering Intermediair (RC)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Omschrijving van de Dienst / Aankoop *</label>
+          <input type="text" id="exp-desc" required placeholder="bijv. Kwartaaladministratie, belastingaangifte en jaarrekening" class="w-full p-2 border border-slate-300 rounded-lg">
+        </div>
+
+        <!-- Financiële Invoer met Live Btw Calculatie -->
+        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Bedrag Excl. (€) *</label>
+              <input type="number" id="exp-imponibile" step="0.01" required placeholder="100.00" oninput="calcExpenseTotals()" class="w-full p-2 border border-slate-300 rounded-lg font-mono font-bold text-slate-900 bg-white">
+            </div>
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Btw-tarief (%)</label>
+              <select id="exp-vat-rate" onchange="calcExpenseTotals()" class="w-full p-2 border border-slate-300 rounded-lg bg-white font-mono">
+                <option value="22.0">22% (Standaard tarief)</option>
+                <option value="10.0">10% (Verlaagd tarief)</option>
+                <option value="4.0">4% (Laag tarief)</option>
+                <option value="0.0">0% (Vrijgesteld art. 10 / Buiten bereik)</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Totaal Incl. (€)</label>
+              <input type="number" id="exp-total" step="0.01" readonly class="w-full p-2 border border-slate-300 rounded-lg font-mono font-bold text-blue-700 bg-slate-100">
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-500 flex justify-between pt-1">
+            <span>Aftrekbare btw (Voorbelasting): <strong id="exp-vat-display" class="text-emerald-600 font-mono">€ 0,00</strong></span>
+            <span>Betaalwijze: <strong>Bankoverschrijving MP05</strong></span>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end gap-3">
+          <button type="button" onclick="closeModal('modal-new-expense')" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50">
+            Annuleren
+          </button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm">
+            Kostenfactuur Opslaan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: TELEFOON APP QR-CODE ================= -->
+  <div id="modal-mobile-app" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col text-center">
+      <div class="px-6 py-4 bg-blue-600 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-mobile-screen-button"></i> Transito Mobile App
+        </h3>
+        <button onclick="closeModal('modal-mobile-app')" class="text-white/80 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <p class="text-xs text-slate-600">
+          Scan deze QR-code met de camera van je telefoon om direct de app te openen:
+        </p>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 mb-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Wereldwijd Online (HTTPS & 4G/5G)
+          </span>
+          <img id="mobile-qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Ffruit-sciences-theories-walls.trycloudflare.com%2Fmobile" alt="QR Code Telefoon App" class="w-44 h-44 rounded-lg shadow-sm border border-slate-200">
+          <a href="https://fruit-sciences-theories-walls.trycloudflare.com/mobile" target="_blank" class="mt-3 text-xs font-mono font-bold text-blue-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:underline break-all" id="mobile-url-display">
+            https://fruit-sciences-theories-walls.trycloudflare.com/mobile
+          </a>
+        </div>
+
+        <div class="bg-blue-50/60 text-blue-900 p-3.5 rounded-xl border border-blue-200 text-left text-xs space-y-1.5">
+          <div class="font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-lightbulb text-amber-500"></i> Tip voor je smartphone:
+          </div>
+          <p class="text-[11px] leading-relaxed">
+            Kies in de browser op je telefoon voor <strong>"Zet op beginscherm" (Add to Home Screen)</strong>. Dan werkt de app schermvullend zonder adresbalk!
+          </p>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button type="button" onclick="closeModal('modal-mobile-app')" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-xs transition">
+          Sluiten
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL: FACTUUR SJABLOON & COPIA DI CORTESIA ================= -->
+  <div id="modal-invoice-template" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-5xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[96vh]">
+      
+      <!-- Modal Header (no-print) -->
+      <div class="px-6 py-3.5 bg-slate-900 text-white flex items-center justify-between no-print shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+            <i class="fa-solid fa-file-invoice"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+              <span id="tpl-modal-inv-num">Factuur PROV-2026-001</span>
+              <span id="tpl-modal-sdi-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold">SDI Geaccepteerd</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">Officiële Copia di Cortesia &amp; Printklaar A4 Sjabloon voor Vervoerder &amp; Boekhouder</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="toggleTemplateCustomizer()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-sliders text-indigo-400"></i> Opmaken &amp; Aanpassen
+          </button>
+          <button onclick="openSendEmailModal(currentTemplateInvoice.id)" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
+            <i class="fa-solid fa-envelope"></i> E-mail Factuur
+          </button>
+          <button onclick="printInvoiceTemplate()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
+            <i class="fa-solid fa-print"></i> Printen / PDF
+          </button>
+          <button onclick="closeModal('modal-invoice-template')" class="text-slate-400 hover:text-white p-1 text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sjabloon Customizer Toolbar (Optioneel uitklapbaar, no-print) -->
+      <div id="template-customizer-bar" class="bg-indigo-50/80 border-b border-indigo-200/80 p-4 space-y-3 no-print hidden shrink-0 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-indigo-950 flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+            <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i> Factuuropmaak &amp; Stijlinstellingen
+          </span>
+          <span class="text-[11px] text-indigo-600 font-medium">Wijzigingen zijn direct zichtbaar in onderstaand sjabloon</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Factuurtitel op document</label>
+            <input type="text" id="tpl-custom-title" value="PROVISIEFACTUUR / NOTA PROVVIGIONI" oninput="updateTemplateLivePreview()" class="w-full p-2 bg-white border border-slate-300 rounded-lg font-semibold text-xs">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Taal &amp; Formaat</label>
+            <select id="tpl-custom-lang" onchange="updateTemplateLivePreview()" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs">
+              <option value="bilingual">Tweetalig (Nederlands / Italiaans)</option>
+              <option value="nl">Nederlands</option>
+              <option value="it">Italiaans (*Solo Italiano*)</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Betalingstermijn</label>
+            <select id="tpl-custom-term" onchange="updateTemplateLivePreview()" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs">
+              <option value="30">30 dagen na factuurdatum</option>
+              <option value="14">14 dagen netto</option>
+              <option value="60">60 dagen einde maand</option>
+              <option value="direct">Direct bij ontvangst</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Detailniveau Ritten</label>
+            <select id="tpl-custom-detail" onchange="updateTemplateLivePreview()" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs">
+              <option value="full">Volledig (met CMR, Verlader &amp; Route)</option>
+              <option value="compact">Compact (Alleen Rit &amp; Provisiebedrag)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Aanvullende clausule / voettekst</label>
+          <input type="text" id="tpl-custom-notes" placeholder="bijv. Goedgekeurd door expeditie Veldhoven Transport..." oninput="updateTemplateLivePreview()" class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs">
+        </div>
+      </div>
+
+      <!-- Scrollable Preview Container -->
+      <div class="overflow-y-auto flex-1 bg-slate-100 p-4 sm:p-8 flex justify-center">
+        
+        <!-- ================= HET ECHTE A4 FACTUUR SJABLOON ================= -->
+        <div id="invoice-printable-sheet" class="bg-white rounded-xl shadow-lg border border-slate-200/90 w-full max-w-[210mm] min-h-[297mm] p-8 sm:p-12 flex flex-col justify-between text-slate-800 font-sans text-xs">
+          
+          <!-- Bovendeel van de factuur -->
+          <div class="space-y-6">
+            
+            <!-- 1. Header & Bedrijfsidentiteit -->
+            <div class="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b-2 border-slate-900">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                    T
+                  </div>
+                  <div>
+                    <h1 class="text-xl font-black text-slate-900 tracking-tight" id="tpl-company-name">Transito Intermediazioni S.r.l.</h1>
+                    <span class="text-[11px] font-semibold text-blue-600 uppercase tracking-wide block">Intermediazione Trasporti &bull; Vrachtbemiddeling</span>
+                  </div>
+                </div>
+                <div class="text-[11px] text-slate-500 space-y-0.5 pt-1">
+                  <div id="tpl-company-address">Via Macello 18 / Schlachthofstraße 18 &bull; 39100 Bolzano (BZ), Italia</div>
+                  <div class="font-mono text-[10px]">
+                    <strong>P.IVA:</strong> <span id="tpl-company-vat">IT09876543210</span> &bull; 
+                    <strong>C.F.:</strong> <span id="tpl-company-cf">09876543210</span> &bull; 
+                    <strong>REA:</strong> <span id="tpl-company-rea">BZ-241598</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">
+                    Cap. Soc. € 100.000,00 i.v. &bull; PEC: <span id="tpl-company-pec">transito.intermediazioni@legalmail.it</span> &bull; SDI: <span id="tpl-company-sdi" class="font-bold text-slate-700">M5UXCR1</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Factuur Titel & Nummer rechtsboven -->
+              <div class="text-left sm:text-right space-y-1">
+                <div class="inline-block px-3 py-1 bg-slate-900 text-white rounded font-mono font-bold text-xs uppercase tracking-wider" id="tpl-doc-title">
+                  PROVISIEFACTUUR / NOTA PROVVIGIONI
+                </div>
+                <div class="text-2xl font-black text-slate-900 font-mono tracking-tight mt-1" id="tpl-inv-number">
+                  PROV-2026-001
+                </div>
+                <div class="text-[11px] text-slate-500">
+                  Formaat: <strong class="text-slate-800">FatturaPA B2B (FPR12)</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Twee Kolommen: Geadresseerde (Vervoerder) & Factuurkenmerken -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 py-2">
+              
+              <!-- Klant / Vervoerder Box (Cessionario / Committente) -->
+              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between pb-1 border-b border-slate-200/80">
+                  <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Factuur gericht aan (*Committente*):</span>
+                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Vaste Vervoerder</span>
+                </div>
+                <div class="space-y-1">
+                  <h3 class="font-bold text-slate-900 text-sm" id="tpl-party-name">Veldhoven International Transport B.V.</h3>
+                  <div class="text-xs text-slate-600" id="tpl-party-address">Transportlaan 14</div>
+                  <div class="text-xs text-slate-600" id="tpl-party-city">5504 KR Veldhoven &bull; Nederland (NL)</div>
+                  <div class="text-[11px] font-mono text-slate-700 pt-1">
+                    <strong>Btw / VAT ID:</strong> <span id="tpl-party-vat" class="font-bold">NL854729381B01</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 font-mono">
+                    SDI Codice: <span id="tpl-party-sdi">XXXXXXX</span> (Buitenlands EU Vervoerder)
+                  </div>
+                </div>
+              </div>
+
+              <!-- Factuur Metagegevens -->
+              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between space-y-2">
+                <div class="space-y-2">
+                  <div class="flex justify-between items-center py-1 border-b border-slate-200/80">
+                    <span class="text-slate-500 text-[11px]">Factuurdatum (*Data emissione*):</span>
+                    <span class="font-bold font-mono text-slate-900" id="tpl-inv-date">21-10-2026</span>
+                  </div>
+                  <div class="flex justify-between items-center py-1 border-b border-slate-200/80">
+                    <span class="text-slate-500 text-[11px]">Vervaldatum (*Scadenza*):</span>
+                    <span class="font-bold font-mono text-blue-700" id="tpl-inv-due">20-11-2026</span>
+                  </div>
+                  <div class="flex justify-between items-center py-1 border-b border-slate-200/80">
+                    <span class="text-slate-500 text-[11px]">Betaalwijze (*Modalità pagamento*):</span>
+                    <span class="font-semibold text-slate-800">Bankoverschrijving / SEPA (MP05)</span>
+                  </div>
+                  <div class="flex justify-between items-center py-1">
+                    <span class="text-slate-500 text-[11px]">SDI Identificatie:</span>
+                    <span class="font-mono text-[10px] text-emerald-700 font-bold" id="tpl-inv-sdi-id">SDI-PROV-20261021-001</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Fiscale Vrijstellingsclausule Banner (Art. 7-ter / Btw-verlegd) -->
+            <div class="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 text-blue-950 space-y-1" id="tpl-vat-notice-box">
+              <div class="font-bold text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-scale-balanced text-blue-600"></i>
+                <span id="tpl-vat-clause-title">Btw Verlegd / Inversione Contabile (Reverse Charge)</span>
+              </div>
+              <p class="text-[11px] text-blue-900 leading-relaxed" id="tpl-vat-clause-text">
+                Operazione non soggetta ad IVA ai sensi dell'art. 7-ter DPR 633/1972 (Natura SDI: N6). 
+                De heffing van de omzetbelasting is verlegd naar de medecontractant in Nederland overeenkomstig artikel 196 van EU-Richtlijn 2006/112/EG.
+              </p>
+            </div>
+
+            <!-- 4. Rittenspecificatie Tabel (De kern van de provisienota) -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <i class="fa-solid fa-truck-fast text-slate-700"></i> Specificatie Bemiddelde Transportopdrachten
+                </h4>
+                <span class="text-[10px] text-slate-400 font-mono" id="tpl-order-count-badge">1 bemiddelde rit</span>
+              </div>
+
+              <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-900 text-white font-semibold text-[11px]">
+                    <tr>
+                      <th class="py-2.5 px-3 w-10 text-center">#</th>
+                      <th class="py-2.5 px-3">Rit / Traject &amp; CMR</th>
+                      <th class="py-2.5 px-3">Verlader (Opdrachtgever)</th>
+                      <th class="py-2.5 px-3 text-right">Vrachtprijs</th>
+                      <th class="py-2.5 px-3 text-center">Commissiemodel</th>
+                      <th class="py-2.5 px-3 text-right">Netto Provisie (€)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tpl-lines-tbody" class="divide-y divide-slate-100 text-slate-700 font-normal">
+                    <!-- Dynamisch gevuld -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 5. Totalen & Bankgegevens Blok -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+              
+              <!-- Betaalinstructie & Bankgegevens -->
+              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Betalingsinstructies:</span>
+                <div class="space-y-1 font-mono text-[11px]">
+                  <div><span class="text-slate-400">Begunstigde:</span> <strong class="text-slate-900" id="tpl-bank-beneficiary">Transito Intermediazioni S.r.l.</strong></div>
+                  <div><span class="text-slate-400">Bank:</span> <span class="text-slate-800" id="tpl-bank-name">Sparkasse - Cassa di Risparmio di Bolzano</span></div>
+                  <div><span class="text-slate-400">IBAN:</span> <strong class="text-blue-700 text-xs" id="tpl-bank-iban">IT60 X 05428 11101 000000123456</strong></div>
+                  <div><span class="text-slate-400">SWIFT / BIC:</span> <span class="text-slate-800" id="tpl-bank-swift">CRBZIT2B</span></div>
+                  <div class="pt-1 text-[10px] text-slate-500 font-sans">
+                    Gelieve bij betaling het factuurnummer <strong class="text-slate-900 font-mono" id="tpl-ref-num">PROV-2026-001</strong> te vermelden.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Totalen Rechtsonder -->
+              <div class="space-y-2">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                  <div class="flex justify-between items-center text-xs text-slate-600">
+                    <span>Subtotaal Bemiddelingsvergoeding:</span>
+                    <span class="font-mono font-bold text-slate-900 text-sm" id="tpl-subtotal">€ 0,00</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs text-slate-600">
+                    <span>Omzetbelasting / IVA (0% Art. 7-ter):</span>
+                    <span class="font-mono font-semibold text-slate-600" id="tpl-vat-amount">€ 0,00</span>
+                  </div>
+                  <div class="pt-2 border-t border-slate-300 flex justify-between items-center">
+                    <div>
+                      <span class="text-sm font-black text-slate-900 block">TOTAAL TE BETALEN:</span>
+                      <span class="text-[10px] text-slate-500">Netto te ontvangen provisies</span>
+                    </div>
+                    <span class="text-xl font-black font-mono text-emerald-700" id="tpl-total-due">€ 0,00</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 6. Opmerkingen / Notities van de Customizer -->
+            <div id="tpl-custom-notes-display" class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-900 text-[11px] hidden">
+              <!-- Dynamische notities -->
+            </div>
+
+          </div>
+
+          <!-- 7. Voettekst met Wettelijke Verwijzing (Onderaan de pagina) -->
+          <div class="pt-6 border-t border-slate-200 text-center text-[10px] text-slate-400 space-y-1">
+            <p>
+              <strong>Transito Intermediazioni S.r.l.</strong> &bull; Capitale Sociale € 100.000,00 int. versato &bull; R.E.A. BZ-241598 &bull; P.IVA / C.F. 09876543210
+            </p>
+            <p class="text-[9px] text-slate-400 italic">
+              Documento analogico emesso a fini gestionali (Copia di cortesia ai sensi dell'art. 1 D.Lgs. 127/2015). L'originale informatico fiscalmente rilevante è trasmesso al Sistema di Interscambio (SDI).
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL: HANDMATIG FACTUUR OPMAKEN ================= -->
+  <div id="modal-draft-invoice" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-file-circle-plus text-indigo-400"></i> Factuur Opmaken (Handmatig Sjabloon)
+        </h3>
+        <button onclick="closeModal('modal-draft-invoice')" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="draft-invoice-form" onsubmit="saveCustomDraftInvoice(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Geadresseerde Onderneming / Transportbedrijf *</label>
+          <input type="text" id="draft-party-name" required class="w-full p-2.5 border border-slate-300 rounded-lg text-sm font-semibold">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Landcode (bijv. NL) *</label>
+            <input type="text" id="draft-party-country" required maxlength="2" class="w-full p-2 border border-slate-300 rounded-lg font-mono uppercase font-bold">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Btw-nummer / VIES *</label>
+            <input type="text" id="draft-party-vat" required class="w-full p-2 border border-slate-300 rounded-lg font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Factuurdatum</label>
+            <input type="date" id="draft-inv-date" required class="w-full p-2 border border-slate-300 rounded-lg font-mono">
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Vervaldatum</label>
+            <input type="date" id="draft-inv-due" required class="w-full p-2 border border-slate-300 rounded-lg font-mono">
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Factuurregels &amp; Provisiebedrag</span>
+            <span class="text-[10px] text-slate-500">Specificeer de dienst</span>
+          </div>
+
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Omschrijving dienst / bemiddeling *</label>
+            <textarea id="draft-line-desc" rows="2" required placeholder="bijv. Bemiddelingsprovisies transportopdrachten periode oktober 2026 namens transportbedrijf" class="w-full p-2 border border-slate-300 rounded-lg"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Netto Provisiebedrag (€) *</label>
+              <input type="number" id="draft-subtotal" step="0.01" required placeholder="1250.00" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono font-bold text-slate-900 bg-white">
+            </div>
+            <div>
+              <label class="font-semibold text-slate-700 block mb-1">Btw-tarief</label>
+              <select id="draft-vat-rate" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white">
+                <option value="0.0">0% (Art. 7-ter / Btw-verlegd naar NL)</option>
+                <option value="22.0">22% (Binnenlands Italië)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end gap-3">
+          <button type="button" onclick="closeModal('modal-draft-invoice')" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50">
+            Annuleren
+          </button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm">
+            Factuur Definitief Opmaken &amp; Opslaan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ================= MODAL: E-MAIL VERZENDEN ================= -->
+  <div id="modal-send-email" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-paper-plane text-blue-400"></i> Factuur Verzenden per E-mail
+        </h3>
+        <button onclick="closeModal('modal-send-email')" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="send-email-form" onsubmit="submitSendEmail(event)" class="p-6 space-y-4 text-xs">
+        <input type="hidden" id="mail-invoice-id">
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Aan (*To: transportbedrijf) *</label>
+          <input type="email" id="mail-to" required placeholder="administratie@veldhoventransport.nl" class="w-full p-2.5 border border-slate-300 rounded-lg font-mono font-medium">
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Kopie (*CC: optioneel boekhouder / commercialista)</label>
+          <input type="email" id="mail-cc" placeholder="studio.rossi@commercialisti.it" class="w-full p-2 border border-slate-300 rounded-lg font-mono">
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Onderwerp (*Subject:) *</label>
+          <input type="text" id="mail-subject" required class="w-full p-2.5 border border-slate-300 rounded-lg font-semibold">
+        </div>
+
+        <div>
+          <label class="font-semibold text-slate-700 block mb-1">Optioneel persoonlijk bericht aan transporteur</label>
+          <textarea id="mail-message" rows="3" placeholder="bijv. Beste collega's, hierbij de commissiefactuur voor de ritten van afgelopen week. De XML is bijgevoegd voor jullie administratie..." class="w-full p-2.5 border border-slate-300 rounded-lg"></textarea>
+        </div>
+
+        <div class="p-3 bg-blue-50/70 rounded-xl border border-blue-200 space-y-2">
+          <span class="font-bold text-blue-950 uppercase tracking-wider text-[10px] block">Mee te zenden bijlagen:</span>
+          <label class="flex items-center gap-2 text-slate-700 cursor-pointer">
+            <input type="checkbox" id="mail-attach-xml" checked class="rounded text-blue-600 focus:ring-blue-500">
+            <span><strong>FatturaPA FPR12 XML</strong> (officieel bestand voor Italiaanse SDI &amp; btw-aangifte)</span>
+          </label>
+          <label class="flex items-center gap-2 text-slate-700 cursor-pointer">
+            <input type="checkbox" id="mail-attach-summary" checked class="rounded text-blue-600 focus:ring-blue-500">
+            <span><strong>Copia di Cortesia</strong> (printbare factuurspecificatie in e-mail)</span>
+          </label>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex items-center justify-between gap-3">
+          <a id="mail-preview-link" href="#" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-eye text-blue-600"></i> Bekijk E-mail Voorbeeld
+          </a>
+          <div class="flex gap-2">
+            <button type="button" onclick="closeModal('modal-send-email')" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50">
+              Annuleren
+            </button>
+            <button type="submit" id="btn-submit-send-email" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm flex items-center gap-1.5">
+              <i class="fa-solid fa-paper-plane"></i> Factuur Nu Verzenden
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ================= DESKTOP PIN LOCKSCREEN ================= -->
+  <div id="modal-desktop-lockscreen" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden text-center p-8 space-y-6">
+      
+      <div class="flex flex-col items-center gap-2">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white text-2xl">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3 class="text-lg font-extrabold text-slate-900 tracking-tight">Transito Beveiligd</h3>
+        <p class="text-xs text-slate-500">Voer je pincode in om toegang te krijgen tot het dashboard</p>
+      </div>
+
+      <form onsubmit="submitDesktopPin(event)" class="space-y-4">
+        <div>
+          <input type="password" id="desktop-pin-input" autofocus required placeholder="••••" maxlength="12" class="w-full text-center text-2xl font-mono tracking-widest font-bold py-3 px-4 bg-slate-50 border-2 border-slate-300 rounded-xl focus:bg-white focus:border-blue-600 focus:outline-none transition">
+          <div id="desktop-pin-error" class="text-xs font-semibold text-rose-500 min-h-[18px] mt-1.5"></div>
+        </div>
+
+        <button type="submit" id="btn-desktop-login" class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 text-sm transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-key text-xs"></i>
+          <span>Dashboard Ontgrendelen</span>
+        </button>
+      </form>
+
+      <div class="text-[11px] text-slate-400 border-t border-slate-100 pt-3">
+        Standaard pincode: <span class="font-mono text-slate-600 font-bold">2026</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notificatie Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
