@@ -12,66 +12,74 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
-  <div class="flex h-screen overflow-hidden">
+  <div class="flex h-screen overflow-hidden relative">
+    <!-- Backdrop overlay for mobile drawer -->
+    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 md:hidden transition-opacity"></div>
+
     <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-slate-200 flex flex-col shrink-0 border-r border-slate-800">
-      <div class="p-5 border-b border-slate-800 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-          <i class="fa-solid fa-handshake-simple text-lg"></i>
+    <aside id="app-sidebar" class="bg-slate-900 text-slate-200 flex flex-col shrink-0 border-r border-slate-800">
+      <div class="sidebar-header p-4 border-b border-slate-800 flex items-center justify-between gap-2.5">
+        <div id="sidebar-brand-box" class="flex items-center gap-2.5 overflow-hidden">
+          <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 shrink-0">
+            <i class="fa-solid fa-handshake-simple text-base"></i>
+          </div>
+          <div class="sidebar-text truncate">
+            <h1 class="font-bold text-sm tracking-tight text-white leading-tight">Transito</h1>
+            <span class="text-[11px] text-blue-400 font-medium">Intermediair</span>
+          </div>
         </div>
-        <div>
-          <h1 class="font-bold text-base tracking-tight text-white leading-tight">Transito</h1>
-          <span class="text-xs text-blue-400 font-medium">Transport Intermediair</span>
-        </div>
+        <button onclick="toggleSidebar()" id="btn-toggle-sidebar" title="Zijbalk inklappen/uitklappen" class="text-slate-400 hover:text-white hover:bg-slate-800 p-2 rounded-lg transition shrink-0">
+          <i class="fa-solid fa-angles-left text-xs" id="sidebar-toggle-icon"></i>
+        </button>
       </div>
 
       <!-- Partner Badge in Sidebar -->
-      <div class="px-4 py-3 bg-slate-950/60 border-b border-slate-800/80">
-        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Optredend namens vervoerder:</span>
-        <div id="sidebar-principal-name" class="text-xs font-semibold text-emerald-400 truncate">Veldhoven Transport B.V.</div>
+      <div class="partner-badge-box px-3.5 py-2.5 bg-slate-950/60 border-b border-slate-800/80">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5 sidebar-text">Optredend namens vervoerder:</span>
+        <div id="sidebar-principal-name" class="text-xs font-semibold text-emerald-400 truncate sidebar-text">Veldhoven Transport B.V.</div>
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
-        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active">
+      <nav class="flex-1 px-2.5 py-3 space-y-1 overflow-y-auto">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" title="Dashboard" class="nav-btn active">
           <i class="fa-solid fa-chart-pie w-5"></i>
-          <span>Dashboard</span>
+          <span class="sidebar-text">Dashboard</span>
         </button>
-        <button onclick="switchTab('orders')" id="nav-orders" class="nav-btn">
+        <button onclick="switchTab('orders')" id="nav-orders" title="Bemiddelde Opdrachten" class="nav-btn">
           <i class="fa-solid fa-clipboard-list w-5"></i>
-          <span>Bemiddelde Opdrachten</span>
-          <span id="badge-active-orders" class="ml-auto bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full font-semibold">0</span>
+          <span class="sidebar-text">Bemiddelde Opdrachten</span>
+          <span id="badge-active-orders" class="sidebar-badge ml-auto bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full font-semibold">0</span>
         </button>
-        <button onclick="switchTab('invoices')" id="nav-invoices" class="nav-btn">
+        <button onclick="switchTab('invoices')" id="nav-invoices" title="Commissiefacturen (SDI)" class="nav-btn">
           <i class="fa-solid fa-file-invoice-dollar w-5"></i>
-          <span>Commissiefacturen (SDI)</span>
+          <span class="sidebar-text">Commissiefacturen (SDI)</span>
         </button>
-        <button onclick="switchTab('accounting')" id="nav-accounting" class="nav-btn">
+        <button onclick="switchTab('accounting')" id="nav-accounting" title="Boekhouding & Fisco" class="nav-btn">
           <i class="fa-solid fa-calculator w-5"></i>
-          <span>Boekhouding & Fisco</span>
-          <span class="ml-auto bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded font-mono font-medium">Italiaans</span>
+          <span class="sidebar-text">Boekhouding & Fisco</span>
+          <span class="sidebar-badge ml-auto bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded font-mono font-medium">Italiaans</span>
         </button>
-        <button onclick="switchTab('parties')" id="nav-parties" class="nav-btn">
+        <button onclick="switchTab('parties')" id="nav-parties" title="Verladers (Klanten)" class="nav-btn">
           <i class="fa-solid fa-building w-5"></i>
-          <span>Verladers (Klanten)</span>
+          <span class="sidebar-text">Verladers (Klanten)</span>
         </button>
-        <button onclick="switchTab('principal')" id="nav-principal" class="nav-btn">
+        <button onclick="switchTab('principal')" id="nav-principal" title="Partner Vervoerder" class="nav-btn">
           <i class="fa-solid fa-truck-front w-5"></i>
-          <span>Partner Vervoerder</span>
+          <span class="sidebar-text">Partner Vervoerder</span>
         </button>
-        <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn">
+        <button onclick="switchTab('settings')" id="nav-settings" title="Mijn Bedrijf & SDI" class="nav-btn">
           <i class="fa-solid fa-sliders w-5"></i>
-          <span>Mijn Bedrijf & SDI</span>
+          <span class="sidebar-text">Mijn Bedrijf & SDI</span>
         </button>
       </nav>
 
       <!-- Bottom Company Pill -->
-      <div class="p-4 border-t border-slate-800 bg-slate-950/40">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs border border-blue-500/30">
+      <div class="company-pill-box p-3.5 border-t border-slate-800 bg-slate-950/40">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs border border-blue-500/30 shrink-0">
             IT
           </div>
-          <div class="truncate">
+          <div class="sidebar-text truncate">
             <div id="sidebar-company-name" class="text-xs font-semibold text-slate-200 truncate">Transito Intermediazioni S.r.l.</div>
             <div id="sidebar-vat-number" class="text-[11px] text-slate-400 font-mono">P.IVA: IT09876543210</div>
           </div>
@@ -82,10 +90,13 @@
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <!-- Top Header -->
-      <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0 shadow-sm">
-        <div class="flex items-center gap-4">
-          <h2 id="page-title" class="text-xl font-bold text-slate-800">Dashboard</h2>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+      <header class="h-16 bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between shrink-0 shadow-sm">
+        <div class="flex items-center gap-3">
+          <button onclick="toggleSidebar()" class="text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100 transition" title="Menu in-/uitklappen">
+            <i class="fa-solid fa-bars text-base"></i>
+          </button>
+          <h2 id="page-title" class="text-lg md:text-xl font-bold text-slate-800 truncate">Dashboard</h2>
+          <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
             Intermediair & Makelaarsmodel
           </span>

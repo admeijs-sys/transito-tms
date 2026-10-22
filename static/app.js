@@ -145,12 +145,57 @@ let chartVolume = null;
 let chartClients = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  initSidebar();
   if (!authToken) {
     showDesktopLockscreen();
   } else {
     initApp();
   }
 });
+
+function toggleSidebar() {
+  const sidebar = document.getElementById("app-sidebar");
+  const icon = document.getElementById("sidebar-toggle-icon");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  if (!sidebar) return;
+
+  const isMobile = window.innerWidth <= 768;
+
+  if (isMobile) {
+    sidebar.classList.toggle("mobile-open");
+    if (backdrop) {
+      if (sidebar.classList.contains("mobile-open")) {
+        backdrop.classList.remove("hidden");
+      } else {
+        backdrop.classList.add("hidden");
+      }
+    }
+  } else {
+    sidebar.classList.toggle("sidebar-collapsed");
+    const isCollapsed = sidebar.classList.contains("sidebar-collapsed");
+    if (icon) {
+      icon.className = isCollapsed ? "fa-solid fa-angles-right text-xs" : "fa-solid fa-angles-left text-xs";
+    }
+    localStorage.setItem("transito_sidebar_collapsed", isCollapsed ? "1" : "0");
+  }
+}
+
+function closeMobileSidebar() {
+  const sidebar = document.getElementById("app-sidebar");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  if (sidebar) sidebar.classList.remove("mobile-open");
+  if (backdrop) backdrop.classList.add("hidden");
+}
+
+function initSidebar() {
+  const sidebar = document.getElementById("app-sidebar");
+  const icon = document.getElementById("sidebar-toggle-icon");
+  const saved = localStorage.getItem("transito_sidebar_collapsed");
+  if (saved === "1" && window.innerWidth > 768 && sidebar) {
+    sidebar.classList.add("sidebar-collapsed");
+    if (icon) icon.className = "fa-solid fa-angles-right text-xs";
+  }
+}
 
 async function initApp() {
   await loadCompany();
@@ -162,6 +207,9 @@ async function initApp() {
 
 // Tab Switching
 function switchTab(tab) {
+  if (window.innerWidth <= 768) {
+    closeMobileSidebar();
+  }
   currentTab = tab;
   
   const sections = ["dashboard", "orders", "invoices", "accounting", "parties", "principal", "settings"];
