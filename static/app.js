@@ -626,6 +626,9 @@ function renderOrders(orders) {
               <i class="fa-solid fa-file-contract"></i> Offerte
             </button>
             ${o.status === 'Offerte' ? `
+              <button onclick="quickEmailQuote(${o.id})" title="Offerte direct naar admeijs@gmail.com mailen" class="px-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-1 border border-indigo-200">
+                <i class="fa-solid fa-paper-plane"></i> Mail
+              </button>
               <button onclick="acceptOrderQuote(${o.id})" title="Offerte accepteren en rit aanmelden" class="px-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-colors flex items-center gap-1">
                 <i class="fa-solid fa-check"></i> Accepteren
               </button>
@@ -1384,6 +1387,8 @@ async function saveNewOrder(e, explicitStatus) {
     targetStatus = checkedRadio ? checkedRadio.value : "Offerte";
   }
 
+  const autoEmailQuote = document.getElementById("ord-auto-send-email") ? document.getElementById("ord-auto-send-email").checked : true;
+
   const payload = {
     client_id: clientId,
     origin_country: (document.getElementById("ord-orig-country").value || "NL").toUpperCase(),
@@ -1399,6 +1404,8 @@ async function saveNewOrder(e, explicitStatus) {
     commission_rate: commRate,
     commission_amount: commAmount,
     status: targetStatus,
+    auto_email_quote: autoEmailQuote,
+    send_email_copy: autoEmailQuote,
     pickup_date: new Date().toISOString().split("T")[0]
   };
 
@@ -1410,7 +1417,11 @@ async function saveNewOrder(e, explicitStatus) {
     });
     const result = await res.json();
     if (result.success) {
-      showToast(targetStatus === 'Offerte' ? "Offerte succesvol aangemaakt!" : (result.message || "Opdracht succesvol aangemeld!"), "success");
+      if (result.email_sent) {
+        showToast("Offerte aangemaakt en direct met PDF verzonden naar admeijs@gmail.com!", "success");
+      } else {
+        showToast(targetStatus === 'Offerte' ? "Offerte succesvol aangemaakt!" : (result.message || "Opdracht succesvol aangemeld!"), "success");
+      }
       closeModal("modal-new-order");
       document.getElementById("order-form").reset();
       await loadOrders();
@@ -1585,6 +1596,44 @@ Optredend namens Veldhoven International Transport B.V.`
   );
 
   window.location.href = `mailto:${clientEmail}?subject=${subject}&body=${body}`;
+}
+
+async function sendCurrentQuoteToMyEmail() {
+  if (!currentQuoteOrder || !currentQuoteOrder.id) {
+    showToast("Geen offerte geselecteerd", "error");
+    return;
+  }
+  return quickEmailQuote(currentQuoteOrder.id, "btn-quote-send-my-email");
+}
+
+async function quickEmailQuote(orderId, btnId) {
+  const btn = btnId ? document.getElementById(btnId) : null;
+  const origHtml = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verzenden...';
+    btn.disabled = true;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to_email: "admeijs@gmail.com" })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast("Offerte met A4 PDF succesvol verzonden naar admeijs@gmail.com!", "success");
+    } else {
+      showToast("Fout bij verzenden: " + (result.error || "Onbekende fout"), "error");
+    }
+  } catch (err) {
+    showToast("Verzendfout: " + err, "error");
+  } finally {
+    if (btn) {
+      btn.innerHTML = origHtml;
+      btn.disabled = false;
+    }
+  }
 }
 
 async function saveNewParty(e) {

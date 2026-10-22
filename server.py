@@ -699,7 +699,42 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
             ))
             conn.commit()
             new_id = cur.lastrowid
+
+            email_info = None
+            if body.get("send_email_copy") or (body.get("status") == "Offerte" and body.get("auto_email_quote", True)):
+                try:
+                    full_order_row = conn.execute("""
+                    SELECT o.*, c.name as client_name, c.country as client_country, c.sdi_code as client_sdi,
+                           c.vat_number as client_vat, c.fiscal_code as client_cf, c.city as client_city,
+                           c.email as client_email, c.pec as client_pec
+                    FROM orders o
+                    LEFT JOIN parties c ON o.client_id = c.id
+                    WHERE o.id = ?
+                    """, (new_id,)).fetchone()
+                    if full_order_row:
+                        full_ord = dict(full_order_row)
+                        comp_settings = database.get_company_settings()
+                        to_dest = body.get("to_email") or comp_settings.get("smtp_sender_email") or comp_settings.get("smtp_user") or "admeijs@gmail.com"
+                        subj, hbody, tbody = email_sender.generate_quote_email_template(full_ord, comp_settings)
+                        pdf_data = pdf_generator.generate_quote_pdf(full_ord, comp_settings)
+                        clean_n = full_ord["order_number"].replace("/", "_").replace(" ", "_")
+                        email_info = email_sender.send_email_smtp(
+                            to_email=to_dest,
+                            subject=subj,
+                            html_content=hbody,
+                            text_content=tbody,
+                            attachments=[{
+                                "filename": f"Offerte_{clean_n}.pdf",
+                                "content": pdf_data,
+                                "mimetype": "application/pdf"
+                            }],
+                            settings=comp_settings
+                        )
+                except Exception as mail_err:
+                    print(f"Fout bij automatisch verzenden offerte e-mail: {mail_err}")
+
             conn.close()
+            msg_suffix = " (Offerte A4 PDF direct doorgestuurd naar admeijs@gmail.com)" if (email_info and email_info.get("success")) else ""
             self.send_json({
                 "success": True,
                 "id": new_id,
@@ -707,7 +742,8 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
                 "commission_amount": commission_amount,
                 "commission_type": comm_type,
                 "commission_rate": comm_rate,
-                "message": f"Bemiddelingsopdracht {order_num} aangemaakt (Provisie: € {commission_amount:.2f})"
+                "email_sent": bool(email_info and email_info.get("success")),
+                "message": f"Bemiddelingsopdracht {order_num} aangemaakt (Provisie: € {commission_amount:.2f}){msg_suffix}"
             })
             return
 
@@ -1060,6 +1096,68 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
                 now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 conn.execute("UPDATE invoices SET email_sent_at = ?, email_sent_to = ? WHERE id = ?", (now_str, to_email, invoice_id))
                 conn.commit()
+
+            conn.close()
+            self.send_json(send_result)
+            return
+
+        elif path.startswith("/api/orders/") and path.endswith("/send-email"):
+            order_id = int(path.split("/")[3])
+            row = conn.execute("""
+            SELECT o.*, c.name as client_name, c.country as client_country, c.sdi_code as client_sdi,
+                   c.vat_number as client_vat, c.fiscal_code as client_cf, c.city as client_city,
+                   c.email as client_email, c.pec as client_pec
+            FROM orders o
+            LEFT JOIN parties c ON o.client_id = c.id
+            WHERE o.id = ?
+            """, (order_id,)).fetchone()
+            if not row:
+                self.send_json({"error": "Opdracht niet gevonden"}, status_code=404)
+                conn.close()
+                return
+
+            order = dict(row)
+            company = database.get_company_settings()
+
+            to_email = body.get("to_email") or company.get("smtp_sender_email") or company.get("smtp_user") or "admeijs@gmail.com"
+            cc_email = body.get("cc_email") or ""
+            custom_subject = body.get("subject")
+            custom_message = body.get("message")
+
+            subject, html_body, text_body = email_sender.generate_quote_email_template(order, company)
+            if custom_subject:
+                subject = custom_subject
+
+            if custom_message:
+                html_body = f"""
+                <div style="font-family: sans-serif; background-color: #fffbeb; border: 1px solid #fef3c7; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #92400e;">
+                    <strong>Persoonlijk bericht van intermediair:</strong><br>
+                    {custom_message.replace(chr(10), '<br>')}
+                </div>
+                """ + html_body
+
+            attachments = []
+            clean_num = order["order_number"].replace("/", "_").replace(" ", "_")
+
+            try:
+                pdf_bytes = pdf_generator.generate_quote_pdf(order, company)
+                attachments.append({
+                    "filename": f"Offerte_{clean_num}.pdf",
+                    "content": pdf_bytes,
+                    "mimetype": "application/pdf"
+                })
+            except Exception as e:
+                print(f"Fout bij genereren Offerte PDF voor e-mail: {e}")
+
+            send_result = email_sender.send_email_smtp(
+                to_email=to_email,
+                subject=subject,
+                html_content=html_body,
+                text_content=text_body,
+                attachments=attachments,
+                cc_email=cc_email if cc_email else None,
+                settings=company
+            )
 
             conn.close()
             self.send_json(send_result)

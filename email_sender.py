@@ -281,3 +281,124 @@ In de bijlage treft u het officiele FatturaPA XML bestand en de factuurspecifica
     """
 
     return subject, html_content, text_content
+
+
+def generate_quote_email_template(order: dict, company: dict) -> tuple:
+    """
+    Genereert een zakelijke HTML en Plain-Text e-mail voor het verzenden van een Vrachtofferte.
+    """
+    num_part = (order.get("order_number") or "").split("-")[-1] or "001"
+    quote_num = f"OFF-2026-{num_part}"
+    today = (order.get("created_at") or datetime.now().strftime("%Y-%m-%d")).split(" ")[0]
+    freight = float(order.get("freight_price", 0.0))
+    orig = f"{order.get('origin_country', '')} {order.get('origin_city', '')}".strip()
+    dest = f"{order.get('destination_country', '')} {order.get('destination_city', '')}".strip()
+    goods = order.get("goods_description") or "Handelsgoederen"
+    weight_str = f"{float(order.get('weight_kg', 0)):.0f} kg" if order.get("weight_kg") else "Volle vracht (FTL)"
+    comp_name = company.get("name", "Transito Intermediazioni S.r.l.")
+    principal_name = company.get("principal_name", "Veldhoven International Transport B.V.")
+    client_name = order.get("client_name") or "Opdrachtgever"
+
+    subject = f"Vrachtofferte {quote_num} - {orig} naar {dest} - {comp_name}"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b;">
+        <div style="max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            
+            <!-- Header -->
+            <div style="background-color: #f59e0b; padding: 24px 32px; color: #0f172a;">
+                <div style="font-size: 11px; text-transform: uppercase; tracking: 1px; font-weight: 800; color: #78350f;">Vrachtbemiddeling &bull; Prijsopgave</div>
+                <h1 style="margin: 6px 0 0 0; font-size: 22px; font-weight: 900; color: #0f172a;">{quote_num}</h1>
+                <div style="font-size: 12px; color: #92400e; margin-top: 4px;">Uitgebracht door {comp_name} namens {principal_name}</div>
+            </div>
+
+            <!-- Body Content -->
+            <div style="padding: 32px;">
+                <p style="font-size: 14px; margin-top: 0;">Beste relatie / administratie,</p>
+                <p style="font-size: 13px; line-height: 1.6; color: #334155;">
+                    Hierbij ontvangt u onze vrachtofferte voor het transporttraject <strong>{orig} &rarr; {dest}</strong> ten behoeve van <strong>{client_name}</strong>.
+                </p>
+
+                <!-- Offerte Box -->
+                <div style="background-color: #fffbeb; border-radius: 12px; padding: 18px 20px; margin: 20px 0; border: 1px solid #fef3c7;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <tr>
+                            <td style="color: #92400e; padding: 5px 0;">Offertenummer:</td>
+                            <td style="text-align: right; font-weight: bold; font-family: monospace;">{quote_num}</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #92400e; padding: 5px 0;">Referentiedossier:</td>
+                            <td style="text-align: right; font-family: monospace;">{order.get('order_number')}</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #92400e; padding: 5px 0;">Traject:</td>
+                            <td style="text-align: right; font-weight: bold;">{orig} &rarr; {dest}</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #92400e; padding: 5px 0;">Lading:</td>
+                            <td style="text-align: right;">{goods} ({weight_str})</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #92400e; padding: 5px 0;">Geldigheidsduur:</td>
+                            <td style="text-align: right; font-weight: bold; color: #b45309;">14 dagen na offertedatum ({today})</td>
+                        </tr>
+                        <tr style="border-top: 2px solid #fde68a;">
+                            <td style="padding: 12px 0 4px 0; font-size: 15px; font-weight: 800; color: #78350f;">Geoffreerd Vrachttarief:</td>
+                            <td style="text-align: right; font-size: 20px; font-weight: 900; color: #b45309; font-family: monospace;">&euro; {freight:.2f}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Voorwaarden -->
+                <div style="background-color: #f8fafc; border-radius: 8px; padding: 12px 16px; margin: 20px 0; font-size: 11px; color: #475569; border: 1px solid #e2e8f0;">
+                    <strong>Inbegrepen transportcondities:</strong>
+                    <ul style="margin: 6px 0 0 0; padding-left: 18px;">
+                        <li>Vervoer geschiedt onder de bepalingen van het CMR-verdrag.</li>
+                        <li>Inclusief geldende dieselolietoeslag (BAF) en tol- en snelwegkosten.</li>
+                        <li>2 uur laadtijd en 2 uur lostijd zijn inbegrepen.</li>
+                        <li>Betalingstermijn: 30 dagen na factuurdatum en ontvangst afgetekende vrachtbrief.</li>
+                    </ul>
+                </div>
+
+                <!-- Bijlage notice -->
+                <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 12px 16px; margin: 20px 0; border-radius: 4px; font-size: 12px; color: #1e3a8a;">
+                    <strong>PDF Bijlage:</strong><br>
+                    In de bijlage treft u het officiële A4 PDF-document <strong>Offerte_{order.get('order_number')}.pdf</strong> aan, compleet met alle ritdetails en het akkoordblok.
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="background-color: #f8fafc; padding: 16px 32px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center;">
+                {comp_name} &bull; Capitale Sociale &euro; 100.000,00 i.v. &bull; REA BZ-241598 &bull; P.IVA {company.get('vat_number')}<br>
+                Verzonden namens hoofdvervoerder {principal_name}.
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    text_content = f"""
+Vrachtofferte: {quote_num} (Dossier: {order.get('order_number')})
+Van: {comp_name}
+Namens: {principal_name}
+Voor: {client_name}
+Datum: {today} (14 dagen geldig)
+
+Traject: {orig} -> {dest}
+Lading: {goods} ({weight_str})
+Geoffreerd Vrachttarief: EUR {freight:.2f} excl. btw
+
+Condities:
+- Vervoer geschiedt conform CMR-verdrag
+- Inclusief diesel- en tolgelden
+- Betalingstermijn: 30 dagen na ontvangst CMR
+
+In de bijlage treft u het officiele A4 PDF-document van deze offerte aan.
+    """
+
+    return subject, html_content, text_content

@@ -651,6 +651,41 @@ function shareMobileQuote() {
   }
 }
 
+async function sendMobileQuoteToMyEmail() {
+  if (!currentMobileQuoteOrder || !currentMobileQuoteOrder.id) {
+    showMobileToast("Geen offerte geselecteerd", "error");
+    return;
+  }
+  const btn = document.getElementById("mob-btn-email-quote");
+  const origHtml = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Verzenden...</span>';
+    btn.disabled = true;
+  }
+
+  try {
+    const res = await authFetch(`/api/orders/${currentMobileQuoteOrder.id}/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to_email: "admeijs@gmail.com" })
+    });
+    const result = await res.json();
+    if (result.success) {
+      if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+      showMobileToast("Offerte met A4 PDF succesvol verzonden naar admeijs@gmail.com!", "success");
+    } else {
+      showMobileToast("Fout: " + (result.error || "Kon niet verzenden"), "error");
+    }
+  } catch (err) {
+    showMobileToast("Netwerkfout: " + err, "error");
+  } finally {
+    if (btn) {
+      btn.innerHTML = origHtml;
+      btn.disabled = false;
+    }
+  }
+}
+
 async function submitMobileClient(e) {
   e.preventDefault();
   const payload = {

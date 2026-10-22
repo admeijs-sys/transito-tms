@@ -1173,6 +1173,15 @@
           </div>
         </div>
 
+        <!-- Directe e-mail optie voor de offerte -->
+        <div class="p-3 bg-amber-50/90 border border-amber-200/90 rounded-xl flex items-center justify-between">
+          <label class="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-800">
+            <input type="checkbox" id="ord-auto-send-email" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300">
+            <span>Offerte direct met PDF bijlage sturen naar <strong class="text-amber-950 font-mono">admeijs@gmail.com</strong></span>
+          </label>
+          <span class="text-[10px] text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-full font-bold">Aanbevolen</span>
+        </div>
+
         <div class="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
           <button type="button" onclick="closeModal('modal-new-order')" class="w-full sm:w-auto px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 transition">
             Annuleren
@@ -1719,6 +1728,9 @@
           <a id="btn-download-quote-pdf" href="#" download class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
             <i class="fa-solid fa-file-pdf"></i> Download PDF
           </a>
+          <button id="btn-quote-send-my-email" onclick="sendCurrentQuoteToMyEmail()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+            <i class="fa-solid fa-paper-plane"></i> Direct naar mijn e-mail
+          </button>
           <button id="btn-quote-accept" onclick="acceptCurrentQuote()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
             <i class="fa-solid fa-check"></i> Accepteren &amp; Rit Aanmelden
           </button>
