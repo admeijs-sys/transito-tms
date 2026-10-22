@@ -306,11 +306,17 @@
             </div>
           </div>
 
-          <!-- Submit Button -->
-          <button type="submit" id="mob-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/30 text-sm flex items-center justify-center gap-2 transition">
-            <i class="fa-solid fa-paper-plane text-xs"></i>
-            <span>Opdracht Aanmelden voor Vervoerder</span>
-          </button>
+          <!-- Submit Buttons: Offerte & Direct Aanmelden -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button type="button" onclick="submitMobileOrderAs('Offerte')" class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-bold py-3.5 px-2 rounded-xl shadow-md text-xs flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-file-contract text-xs"></i>
+              <span>Als Offerte</span>
+            </button>
+            <button type="button" onclick="submitMobileOrderAs('Aangemeld')" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3.5 px-2 rounded-xl shadow-md text-xs flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-paper-plane text-xs"></i>
+              <span>Rit Aanmelden</span>
+            </button>
+          </div>
         </form>
       </div>
     </section>
@@ -390,6 +396,89 @@
     <div id="mob-toast-content" class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-medium flex items-center gap-2.5 border border-slate-700">
       <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
       <span id="mob-toast-text">Melding</span>
+    </div>
+  </div>
+
+  <!-- Mobile Offerte Viewer Modal -->
+  <div id="modal-mob-quote" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-file-contract"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-xs sm:text-sm" id="mob-quote-title">Offerte OFF-2026-001</h3>
+            <p class="text-[10px] text-slate-400" id="mob-quote-subtitle">Prijsopgave voor verlader</p>
+          </div>
+        </div>
+        <button onclick="closeMobileQuoteModal()" class="text-slate-400 hover:text-white p-1 text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4 text-xs">
+        <!-- Status & Geldigheid -->
+        <div class="flex items-center justify-between p-3 bg-amber-50/80 rounded-2xl border border-amber-200/80">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-amber-800 block">Status Document</span>
+            <span class="font-bold text-amber-950 text-xs" id="mob-quote-status">📋 Offerte (Vrijblijvend)</span>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] uppercase font-bold text-amber-800 block">Geldig t/m</span>
+            <span class="font-bold text-amber-900 text-xs" id="mob-quote-valid">14 dagen</span>
+          </div>
+        </div>
+
+        <!-- Verlader & Vervoerder -->
+        <div class="space-y-1">
+          <span class="text-[10px] uppercase font-bold text-slate-400 block">Opdrachtgever / Verlader</span>
+          <div class="font-bold text-slate-900 text-sm" id="mob-quote-client">—</div>
+          <div class="text-[11px] text-slate-500" id="mob-quote-client-details">—</div>
+        </div>
+
+        <!-- Traject -->
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <span class="text-[10px] uppercase font-bold text-slate-400 block">Traject &amp; Planning</span>
+          <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
+            <span class="text-blue-600" id="mob-quote-from">—</span>
+            <i class="fa-solid fa-arrow-right text-[10px] text-slate-400"></i>
+            <span class="text-emerald-600" id="mob-quote-to">—</span>
+          </div>
+          <div class="text-[11px] text-slate-500 flex justify-between pt-1 border-t border-slate-200">
+            <span>Laaddatum:</span>
+            <span class="font-semibold text-slate-700" id="mob-quote-pickup">—</span>
+          </div>
+        </div>
+
+        <!-- Lading -->
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+          <span class="text-[10px] uppercase font-bold text-slate-400 block">Goederen &amp; Gewicht</span>
+          <div class="font-bold text-slate-800 text-xs" id="mob-quote-goods">—</div>
+          <div class="text-[11px] text-slate-500" id="mob-quote-weight">—</div>
+        </div>
+
+        <!-- Vrachtprijs -->
+        <div class="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-amber-800 block">Geoffreerd Vrachttarief</span>
+            <span class="text-[10px] text-slate-500">Excl. BTW (Art. 7-ter / CMR)</span>
+          </div>
+          <div class="text-xl font-black font-mono text-amber-800" id="mob-quote-price">€ 0,00</div>
+        </div>
+
+        <!-- Actieknoppen -->
+        <div class="space-y-2 pt-2">
+          <button id="mob-btn-accept-quote" onclick="acceptMobileQuote()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-check"></i>
+            <span>Offerte Accepteren &amp; Rit Aanmelden</span>
+          </button>
+          <button onclick="shareMobileQuote()" class="w-full bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow text-xs flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>Offerte Delen / Versturen</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -193,10 +193,11 @@ function renderMobileRecentOrders() {
 
   container.innerHTML = recents.map(o => {
     let statusBadge = "";
-    if (o.status === "Aangemeld") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">Aangemeld</span>`;
+    if (o.status === "Offerte") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">Offerte</span>`;
+    else if (o.status === "Aangemeld") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">Aangemeld</span>`;
     else if (o.status === "Onderweg") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">Onderweg</span>`;
     else if (o.status === "Geleverd") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700">Geleverd</span>`;
-    else if (o.status === "Gefactureerd") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">Gefactureerd</span>`;
+    else if (o.status === "Gefactureerd" || o.status === "Commissie Gefactureerd") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">Gefactureerd</span>`;
 
     return `
       <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
@@ -275,6 +276,7 @@ async function loadMobileOrders() {
   container.innerHTML = mobileOrders.map(o => {
     const isBilled = o.status === "Commissie Gefactureerd";
     const statusColor = isBilled ? 'bg-purple-100 text-purple-800' :
+                        o.status === 'Offerte' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
                         o.status === 'Onderweg' ? 'bg-amber-100 text-amber-800' :
                         o.status === 'Geleverd' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800';
 
@@ -302,17 +304,27 @@ async function loadMobileOrders() {
         </div>
         <div class="flex items-center justify-between pt-1.5 border-t border-slate-100">
           <div class="flex items-center gap-1.5">
-            <label class="text-[10px] font-semibold text-slate-500">Status:</label>
             <select onchange="updateMobileOrderStatus(${o.id}, this.value)" class="text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none">
+              <option value="Offerte" ${o.status === 'Offerte' ? 'selected' : ''}>📋 Offerte</option>
               <option value="Aangemeld" ${o.status === 'Aangemeld' ? 'selected' : ''}>Aangemeld</option>
               <option value="Onderweg" ${o.status === 'Onderweg' ? 'selected' : ''}>Onderweg</option>
               <option value="Geleverd" ${o.status === 'Geleverd' ? 'selected' : ''}>Geleverd</option>
               <option value="Commissie Gefactureerd" ${o.status === 'Commissie Gefactureerd' ? 'selected' : ''}>Gefactureerd</option>
             </select>
           </div>
-          <button onclick="deleteMobileOrder(${o.id})" class="text-slate-400 hover:text-rose-600 p-1.5 text-xs" title="Verwijderen" ${isBilled ? 'style="display:none;"' : ''}>
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button onclick="viewMobileQuote(${o.id})" class="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-[10px] font-bold flex items-center gap-1 shadow-sm transition">
+              <i class="fa-solid fa-file-contract"></i> Offerte
+            </button>
+            ${o.status === 'Offerte' ? `
+              <button onclick="acceptMobileQuoteDirect(${o.id})" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm transition">
+                <i class="fa-solid fa-check"></i>
+              </button>
+            ` : ''}
+            <button onclick="deleteMobileOrder(${o.id})" class="text-slate-400 hover:text-rose-600 p-1.5 text-xs" title="Verwijderen" ${isBilled ? 'style="display:none;"' : ''}>
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -472,11 +484,20 @@ function onMobileDirectCommissionInput() {
   }
 }
 
-async function submitMobileOrder(e) {
-  e.preventDefault();
-  const btn = document.getElementById("mob-submit-btn");
-  btn.disabled = true;
-  btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Bezig met opslaan...`;
+let currentMobileQuoteOrder = null;
+
+function submitMobileOrderAs(status) {
+  const form = document.getElementById("mobile-order-form");
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+  submitMobileOrder(null, status);
+}
+
+async function submitMobileOrder(e, explicitStatus) {
+  if (e && e.preventDefault) e.preventDefault();
+  const targetStatus = explicitStatus || "Aangemeld";
 
   const freight = parseFloat(document.getElementById("mob-freight").value) || 0;
   const commType = currentMobileCommissionMode;
@@ -502,7 +523,7 @@ async function submitMobileOrder(e) {
     commission_rate: commRate,
     commission_amount: commAmount,
     pickup_date: document.getElementById("mob-pickup-date").value || new Date().toISOString().split("T")[0],
-    status: "Aangemeld"
+    status: targetStatus
   };
 
   try {
@@ -514,7 +535,7 @@ async function submitMobileOrder(e) {
     const result = await res.json();
     if (result.success) {
       if (navigator.vibrate) navigator.vibrate(80);
-      showMobileToast(`Opdracht ${result.order_number} aangemeld! (Provisie: € ${commAmount.toFixed(2)})`, "success");
+      showMobileToast(targetStatus === 'Offerte' ? `Offerte ${result.order_number} aangemaakt!` : `Opdracht ${result.order_number} aangemeld!`, "success");
       document.getElementById("mobile-order-form").reset();
       document.getElementById("mob-pickup-date").value = new Date().toISOString().split("T")[0];
       if (mobileCompany.default_commission_type) {
@@ -524,15 +545,109 @@ async function submitMobileOrder(e) {
       }
       calcMobileCommission();
       await loadMobileOrders();
-      switchMobileView("view-orders-list");
+
+      if (targetStatus === 'Offerte' && result.id) {
+        viewMobileQuote(result.id);
+      } else {
+        switchMobileView("view-orders-list");
+      }
     } else {
-      showMobileToast("Fout: " + result.error, "error");
+      showMobileToast("Fout: " + (result.error || "Kon niet opslaan"), "error");
     }
   } catch (err) {
     showMobileToast("Netwerkfout: " + err, "error");
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `<i class="fa-solid fa-paper-plane text-xs"></i> <span>Opdracht Aanmelden voor Vervoerder</span>`;
+  }
+}
+
+async function viewMobileQuote(orderId) {
+  try {
+    const res = await authFetch(`/api/orders/${orderId}`);
+    if (!res.ok) throw new Error("Opdracht niet gevonden");
+    const data = await res.json();
+    currentMobileQuoteOrder = data.order;
+    const o = data.order;
+
+    const numPart = (o.order_number || "").split("-").pop() || "001";
+    const quoteNum = `OFF-2026-${numPart}`;
+
+    document.getElementById("mob-quote-title").textContent = `Offerte ${quoteNum}`;
+    document.getElementById("mob-quote-subtitle").textContent = `Dossier: ${o.order_number}`;
+    document.getElementById("mob-quote-status").textContent = o.status === 'Offerte' ? '📋 Offerte (Vrijblijvend)' : `🔵 ${o.status}`;
+    document.getElementById("mob-quote-valid").textContent = "14 dagen geldig";
+
+    document.getElementById("mob-quote-client").textContent = o.client_name || "Verlader";
+    document.getElementById("mob-quote-client-details").textContent = `${o.client_city || ''} (${o.client_country || ''}) • BTW: ${o.client_vat || '—'}`;
+
+    document.getElementById("mob-quote-from").textContent = `${o.origin_country} - ${o.origin_city}`;
+    document.getElementById("mob-quote-to").textContent = `${o.destination_country} - ${o.destination_city}`;
+    document.getElementById("mob-quote-pickup").textContent = o.pickup_date || "Op afroep";
+
+    document.getElementById("mob-quote-goods").textContent = o.goods_description || "Handelsgoederen";
+    document.getElementById("mob-quote-weight").textContent = `${o.weight_kg ? o.weight_kg.toLocaleString("nl-NL") + ' kg' : 'Volle vracht (FTL)'}`;
+
+    document.getElementById("mob-quote-price").textContent = `€ ${(o.freight_price || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const acceptBtn = document.getElementById("mob-btn-accept-quote");
+    if (acceptBtn) {
+      if (o.status === 'Offerte') {
+        acceptBtn.classList.remove("hidden");
+      } else {
+        acceptBtn.classList.add("hidden");
+      }
+    }
+
+    document.getElementById("modal-mob-quote").classList.remove("hidden");
+  } catch (err) {
+    showMobileToast("Fout bij openen offerte: " + err, "error");
+  }
+}
+
+function closeMobileQuoteModal() {
+  document.getElementById("modal-mob-quote").classList.add("hidden");
+}
+
+async function acceptMobileQuoteDirect(orderId) {
+  try {
+    const res = await authFetch(`/api/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "Aangemeld" })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showMobileToast("Offerte geaccepteerd! De rit is nu Aangemeld.", "success");
+      await loadMobileOrders();
+    } else {
+      showMobileToast("Fout: " + (result.error || "Kon niet bijwerken"), "error");
+    }
+  } catch (err) {
+    showMobileToast("Netwerkfout: " + err, "error");
+  }
+}
+
+async function acceptMobileQuote() {
+  if (!currentMobileQuoteOrder) return;
+  await acceptMobileQuoteDirect(currentMobileQuoteOrder.id);
+  closeMobileQuoteModal();
+}
+
+function shareMobileQuote() {
+  if (!currentMobileQuoteOrder) return;
+  const o = currentMobileQuoteOrder;
+  const numPart = (o.order_number || "").split("-").pop() || "001";
+  const quoteNum = `OFF-2026-${numPart}`;
+
+  const shareText = `Vrachtofferte ${quoteNum} (${o.origin_country}-${o.origin_city} -> ${o.destination_country}-${o.destination_city}) voor € ${o.freight_price.toFixed(2)} excl. btw conform CMR. Transito Intermediazioni S.r.l.`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: `Offerte ${quoteNum}`,
+      text: shareText
+    }).catch(() => {});
+  } else {
+    const subject = encodeURIComponent(`Offerte ${quoteNum} - ${o.origin_city} naar ${o.destination_city}`);
+    const body = encodeURIComponent(shareText);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
   }
 }
 

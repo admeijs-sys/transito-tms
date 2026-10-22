@@ -513,7 +513,7 @@ def get_stats():
     c.execute("SELECT COUNT(*) FROM orders WHERE status IN ('Aangemeld', 'Bevestigd door Vervoerder', 'Onderweg')")
     active_orders = c.fetchone()[0]
 
-    c.execute("SELECT COALESCE(SUM(commission_amount), 0) FROM orders WHERE status != 'Commissie Gefactureerd'")
+    c.execute("SELECT COALESCE(SUM(commission_amount), 0) FROM orders WHERE status NOT IN ('Commissie Gefactureerd', 'Offerte')")
     unbilled_commissions = round(c.fetchone()[0], 2)
 
     c.execute("SELECT COUNT(*) FROM invoices")
@@ -630,7 +630,7 @@ def get_accounting_summary():
 
     # Cassa en Banken
     disponibilita_liquide = round(capitale_sociale + total_ricavi - total_costi - total_imposte, 2)
-    crediti_clienti = round(conn.execute("SELECT COALESCE(SUM(commission_amount), 0) FROM orders WHERE status != 'Commissie Gefactureerd'").fetchone()[0], 2)
+    crediti_clienti = round(conn.execute("SELECT COALESCE(SUM(commission_amount), 0) FROM orders WHERE status NOT IN ('Commissie Gefactureerd', 'Offerte')").fetchone()[0], 2)
 
     conn.close()
 

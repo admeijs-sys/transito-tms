@@ -604,7 +604,8 @@ function renderOrders(orders) {
           <div class="text-[11px] text-slate-400 font-mono">${o.weight_kg ? o.weight_kg + ' kg' : ''} ${o.cmr_number ? '&bull; CMR: ' + o.cmr_number : ''}</div>
         </td>
         <td class="py-3.5 px-4">
-          <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs font-semibold rounded-lg px-2.5 py-1.5 border border-slate-300 bg-white text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+          <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs font-semibold rounded-lg px-2 py-1.5 border ${o.status === 'Offerte' ? 'border-amber-400 bg-amber-50 text-amber-900 font-bold' : 'border-slate-300 bg-white text-slate-800'} shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+            <option value="Offerte" ${o.status === 'Offerte' ? 'selected' : ''}>📋 Offerte</option>
             <option value="Aangemeld" ${o.status === 'Aangemeld' ? 'selected' : ''}>🔵 Aangemeld</option>
             <option value="Onderweg" ${o.status === 'Onderweg' ? 'selected' : ''}>🟠 Onderweg</option>
             <option value="Geleverd" ${o.status === 'Geleverd' ? 'selected' : ''}>🟢 Geleverd</option>
@@ -621,7 +622,14 @@ function renderOrders(orders) {
         </td>
         <td class="py-3.5 px-4 text-center">
           <div class="flex items-center justify-center gap-1.5">
-            ${!isBilled ? `
+            <button onclick="viewOrderQuote(${o.id})" title="Offerte bekijken & printen voor verlader" class="px-2 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-1 border border-amber-200">
+              <i class="fa-solid fa-file-contract"></i> Offerte
+            </button>
+            ${o.status === 'Offerte' ? `
+              <button onclick="acceptOrderQuote(${o.id})" title="Offerte accepteren en rit aanmelden" class="px-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-colors flex items-center gap-1">
+                <i class="fa-solid fa-check"></i> Accepteren
+              </button>
+            ` : (!isBilled ? `
               <button onclick="generateSingleCommissionInvoice(${o.id})" title="Genereer SDI Factuur voor deze commissie aan ${escapeHtml(currentCompany.principal_name)}" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-1">
                 <i class="fa-solid fa-file-invoice"></i> Factureer
               </button>
@@ -629,7 +637,7 @@ function renderOrders(orders) {
               <span class="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-1 rounded border border-purple-200">
                 <i class="fa-solid fa-check mr-1"></i> Gefactureerd
               </span>
-            `}
+            `)}
             <button onclick="deleteOrder(${o.id})" title="Opdracht verwijderen" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition" ${isBilled ? 'disabled opacity-30 cursor-not-allowed' : ''}>
               <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
@@ -1339,8 +1347,25 @@ function onDesktopDirectCommissionInput() {
   }
 }
 
-async function saveNewOrder(e) {
-  e.preventDefault();
+let currentQuoteOrder = null;
+
+function toggleOrderSubmitMode(mode) {
+  const radio = document.getElementById(`ord-type-${mode === 'Offerte' ? 'offerte' : 'opdracht'}`);
+  if (radio) radio.checked = true;
+}
+
+function submitOrderAs(status) {
+  const form = document.getElementById("order-form");
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+  toggleOrderSubmitMode(status);
+  saveNewOrder(null, status);
+}
+
+async function saveNewOrder(e, explicitStatus) {
+  if (e && e.preventDefault) e.preventDefault();
   const freight = parseFloat(document.getElementById("ord-freight").value) || 0;
   const commType = currentDesktopCommissionMode;
   const commRate = parseFloat(document.getElementById("ord-comm-rate").value) || 10.0;
@@ -1349,6 +1374,12 @@ async function saveNewOrder(e) {
 
   const clientVal = document.getElementById("ord-client") ? document.getElementById("ord-client").value : "";
   const clientId = clientVal && !isNaN(parseInt(clientVal, 10)) ? parseInt(clientVal, 10) : null;
+
+  let targetStatus = explicitStatus;
+  if (!targetStatus) {
+    const checkedRadio = document.querySelector('input[name="ord_doc_type"]:checked');
+    targetStatus = checkedRadio ? checkedRadio.value : "Offerte";
+  }
 
   const payload = {
     client_id: clientId,
@@ -1364,7 +1395,7 @@ async function saveNewOrder(e) {
     commission_type: commType,
     commission_rate: commRate,
     commission_amount: commAmount,
-    status: "Aangemeld",
+    status: targetStatus,
     pickup_date: new Date().toISOString().split("T")[0]
   };
 
@@ -1376,18 +1407,177 @@ async function saveNewOrder(e) {
     });
     const result = await res.json();
     if (result.success) {
-      showToast(result.message, "success");
+      showToast(targetStatus === 'Offerte' ? "Offerte succesvol aangemaakt!" : (result.message || "Opdracht succesvol aangemeld!"), "success");
       closeModal("modal-new-order");
       document.getElementById("order-form").reset();
       await loadOrders();
       await loadStats();
       switchTab("orders");
+
+      if (targetStatus === 'Offerte' && result.id) {
+        viewOrderQuote(result.id);
+      }
     } else {
       showToast("Fout bij opslaan: " + (result.error || result.message || "Onbekende fout"), "error");
     }
   } catch (err) {
     showToast("Fout bij opslaan opdracht: " + err, "error");
   }
+}
+
+async function viewOrderQuote(orderId) {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}`);
+    if (!res.ok) throw new Error("Opdrachtgegevens niet gevonden");
+    const data = await res.json();
+    currentQuoteOrder = data.order;
+    const o = data.order;
+    const comp = data.company || currentCompany;
+
+    const numPart = (o.order_number || "").split("-").pop() || "001";
+    const quoteNum = `OFF-2026-${numPart}`;
+    const today = (o.created_at || new Date().toISOString()).split("T")[0];
+    const validUntil = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+    // Header modal
+    document.getElementById("quote-modal-title").textContent = `Offerte ${quoteNum}`;
+    const badgeEl = document.getElementById("quote-modal-status-badge");
+    if (badgeEl) {
+      badgeEl.textContent = o.status;
+      badgeEl.className = o.status === 'Offerte' 
+        ? "text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold"
+        : "text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold";
+    }
+
+    // Toggle accept button visibility
+    const acceptBtn = document.getElementById("btn-quote-accept");
+    if (acceptBtn) {
+      if (o.status === "Offerte") {
+        acceptBtn.classList.remove("hidden");
+      } else {
+        acceptBtn.classList.add("hidden");
+      }
+    }
+
+    // Bedrijf
+    document.getElementById("quote-company-name").textContent = comp.name || "Transito Intermediazioni S.r.l.";
+    document.getElementById("quote-company-address").textContent = `${comp.address || 'Via Macello 18'} • ${comp.zip || '39100'} ${comp.city || 'Bolzano'} (${comp.province || 'BZ'}), ${comp.country || 'IT'}`;
+    document.getElementById("quote-company-vat").textContent = comp.vat_number || "IT09876543210";
+    document.getElementById("quote-company-cf").textContent = comp.fiscal_code || "09876543210";
+    document.getElementById("quote-company-rea").textContent = comp.rea_number || "BZ-241598";
+    document.getElementById("quote-company-email").textContent = comp.smtp_sender_email || comp.pec || "info@transito.it";
+
+    // Offerte nummers & data
+    document.getElementById("quote-number-display").textContent = quoteNum;
+    document.getElementById("quote-date-display").textContent = today;
+    document.getElementById("quote-valid-display").textContent = validUntil;
+    document.getElementById("quote-ref-display").textContent = o.order_number;
+
+    // Verlader
+    document.getElementById("quote-client-name").textContent = o.client_name || "Opdrachtgever / Verlader";
+    document.getElementById("quote-client-address-display").textContent = o.client_address || "—";
+    document.getElementById("quote-client-city-display").textContent = `${o.client_zip || ''} ${o.client_city || ''} (${o.client_country || ''})`.trim() || "—";
+    document.getElementById("quote-client-vat-display").textContent = o.client_vat || o.client_cf || "—";
+    document.getElementById("quote-client-sdi-display").textContent = o.client_sdi || "0000000";
+
+    // Vervoerder
+    document.getElementById("quote-carrier-name").textContent = comp.principal_name || "Veldhoven International Transport B.V.";
+    document.getElementById("quote-carrier-address").textContent = `${comp.principal_address || 'Transportlaan 14'} • ${comp.principal_zip || '5504 KR'} ${comp.principal_city || 'Veldhoven'}`;
+
+    // Traject & Lading
+    document.getElementById("quote-route-from").textContent = `${o.origin_country} - ${o.origin_city}`;
+    document.getElementById("quote-origin-address-display").textContent = o.origin_address || "Standaard laadadres";
+    document.getElementById("quote-pickup-date-display").textContent = o.pickup_date || "Op afroep / binnen geldigheid";
+
+    document.getElementById("quote-route-to").textContent = `${o.destination_country} - ${o.destination_city}`;
+    document.getElementById("quote-dest-address-display").textContent = o.destination_address || "Standaard losadres";
+    document.getElementById("quote-delivery-date-display").textContent = o.delivery_date || "Conform overeengekomen rijtijd";
+
+    document.getElementById("quote-goods-display").textContent = o.goods_description || "Handelsgoederen";
+    document.getElementById("quote-transport-type-display").textContent = o.transport_type === 'domestic' ? 'Nationaal Italiaans transport' : 'Internationaal FTL wegtransport';
+    document.getElementById("quote-weight-display").textContent = o.weight_kg ? `${o.weight_kg.toLocaleString("nl-NL")} kg` : "—";
+    document.getElementById("quote-pallets-display").textContent = o.palettes ? `${o.palettes} plts` : "—";
+    document.getElementById("quote-ldm-display").textContent = o.loading_meters ? `${o.loading_meters} ldm` : "—";
+
+    // Prijzen
+    const freightFormatted = formatCurrency(o.freight_price);
+    document.getElementById("quote-line-price-display").textContent = freightFormatted;
+    document.getElementById("quote-subtotal-display").textContent = freightFormatted;
+    document.getElementById("quote-total-price-display").textContent = freightFormatted;
+
+    document.getElementById("modal-order-quote").classList.remove("hidden");
+  } catch (err) {
+    showToast("Fout bij openen offerte: " + err, "error");
+  }
+}
+
+async function acceptOrderQuote(orderId) {
+  const targetId = orderId || (currentQuoteOrder ? currentQuoteOrder.id : null);
+  if (!targetId) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/orders/${targetId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "Aangemeld" })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast("Offerte succesvol geaccepteerd! De opdracht staat nu op 'Aangemeld'.", "success");
+      closeModal("modal-order-quote");
+      await loadOrders();
+      await loadStats();
+    } else {
+      showToast("Fout: " + (result.error || "Kon status niet bijwerken"), "error");
+    }
+  } catch (err) {
+    showToast("Netwerkfout: " + err, "error");
+  }
+}
+
+function acceptCurrentQuote() {
+  if (currentQuoteOrder) {
+    acceptOrderQuote(currentQuoteOrder.id);
+  }
+}
+
+function printOrderQuote() {
+  window.print();
+}
+
+function openSendQuoteEmailModal() {
+  if (!currentQuoteOrder) return;
+  const o = currentQuoteOrder;
+  const numPart = (o.order_number || "").split("-").pop() || "001";
+  const quoteNum = `OFF-2026-${numPart}`;
+
+  const clientEmail = (o.client_pec && o.client_pec.includes("@")) ? o.client_pec : "";
+  const subject = encodeURIComponent(`Offerte Vrachtbemiddeling ${quoteNum} - ${o.origin_city} naar ${o.destination_city}`);
+  const body = encodeURIComponent(
+`Geachte relatie,
+
+Hierbij ontvangt u onze vrachtofferte ${quoteNum} voor onderstaand transport:
+
+Dossier: ${o.order_number}
+Traject: ${o.origin_country} - ${o.origin_city} naar ${o.destination_country} - ${o.destination_city}
+Goederen: ${o.goods_description || 'Handelsgoederen'} (${o.weight_kg ? o.weight_kg + ' kg' : ''})
+Vrachttarief: € ${o.freight_price.toFixed(2)} excl. btw
+
+Condities:
+- Vervoer geschiedt onder de bepalingen van het CMR-verdrag
+- Inclusief geldende dieselolietoeslag en tolgelden
+- Betalingstermijn: 30 dagen na levering en ontvangst afgetekende vrachtbrief
+- Geldigheidsduur: 14 dagen onder voorbehoud van materieelbeschikbaarheid
+
+Voor akkoord kunt u deze e-mail bevestigen of ondertekend retourneren.
+
+Met vriendelijke groet,
+
+Transito Intermediazioni S.r.l.
+Optredend namens Veldhoven International Transport B.V.`
+  );
+
+  window.location.href = `mailto:${clientEmail}?subject=${subject}&body=${body}`;
 }
 
 async function saveNewParty(e) {
@@ -1887,6 +2077,7 @@ function formatCurrency(val) {
 
 function getStatusBadge(status) {
   const map = {
+    'Offerte': 'badge-offerte',
     'Aangemeld': 'badge-gepland',
     'Bevestigd door Vervoerder': 'badge-onderweg',
     'Onderweg': 'badge-onderweg',

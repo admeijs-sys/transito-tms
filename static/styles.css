@@ -177,7 +177,13 @@ pre code {
   }
 }
 
-/* ================= PRINT STYLING VOOR FACTUUR SJABLOON ================= */
+.badge-offerte {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* ================= PRINT STYLING VOOR FACTUUR & OFFERTE SJABLOON ================= */
 @media print {
   body {
     background-color: #ffffff !important;
@@ -186,17 +192,18 @@ pre code {
   body * {
     visibility: hidden;
   }
-  #invoice-printable-sheet, #invoice-printable-sheet * {
+  #invoice-printable-sheet, #invoice-printable-sheet *,
+  #quote-printable-sheet, #quote-printable-sheet * {
     visibility: visible;
   }
-  #invoice-printable-sheet {
+  #invoice-printable-sheet, #quote-printable-sheet {
     position: absolute;
     left: 0;
     top: 0;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 20mm !important;
+    padding: 15mm !important;
     box-shadow: none !important;
     border: none !important;
     background: #ffffff !important;

@@ -319,6 +319,29 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
             conn.close()
             return
 
+        elif path.startswith("/api/orders/") and len(path.split("/")) == 4:
+            order_id = int(path.split("/")[3])
+            row = conn.execute("""
+            SELECT o.*, 
+                   c.name as client_name, c.country as client_country, c.sdi_code as client_sdi,
+                   c.vat_number as client_vat, c.fiscal_code as client_cf, c.address as client_address,
+                   c.city as client_city, c.zip as client_zip, c.pec as client_pec,
+                   i.invoice_number as commission_invoice_number
+            FROM orders o
+            LEFT JOIN parties c ON o.client_id = c.id
+            LEFT JOIN invoices i ON o.commission_invoice_id = i.id
+            WHERE o.id = ?
+            """, (order_id,)).fetchone()
+            if not row:
+                self.send_json({"error": "Opdracht niet gevonden"}, status_code=404)
+                conn.close()
+                return
+            order = dict(row)
+            company = database.get_company_settings()
+            self.send_json({"order": order, "company": company})
+            conn.close()
+            return
+
         elif path == "/api/invoices":
             rows = conn.execute("""
             SELECT * FROM invoices ORDER BY id DESC
