@@ -1852,18 +1852,14 @@ async function openMobileAppModal() {
   const qrImg = document.getElementById("mobile-qr-code");
   const urlDisplay = document.getElementById("mobile-url-display");
 
-  // Als we op een online server zitten (zoals onrender.com), gebruik direct het actieve domein!
-  const isCloud = window.location.hostname !== "127.0.0.1" && window.location.hostname !== "localhost";
+  // Bepaal mobiele URL via actieve tunnel of lokaal netwerk
   let mobileUrl = `${window.location.origin}/mobile`;
-
-  if (!isCloud) {
-    try {
-      const res = await fetch(`${API_BASE}/network-info`);
-      const info = await res.json();
-      if (info.mobile_url) mobileUrl = info.mobile_url;
-    } catch (err) {
-      console.warn("Kon netwerk info niet automatisch ophalen:", err);
-    }
+  try {
+    const res = await fetch(`${API_BASE}/network-info`);
+    const info = await res.json();
+    if (info.mobile_url) mobileUrl = info.mobile_url;
+  } catch (err) {
+    console.warn("Kon netwerk info niet automatisch ophalen:", err);
   }
 
   if (qrImg) {
