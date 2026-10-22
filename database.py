@@ -298,6 +298,7 @@ def init_db():
     # Zet auth_enabled standaard op 0 zodat gebruikers nooit per ongeluk geblokkeerd worden
     try:
         cursor.execute("UPDATE company_settings SET auth_enabled = 0 WHERE id = 1")
+        conn.commit()
     except Exception:
         pass
 
@@ -724,13 +725,8 @@ def toggle_app_auth(enabled: bool) -> bool:
 
 
 def is_auth_enabled() -> bool:
-    """Geeft aan of pincodebeveiliging actief is."""
-    conn = get_db_connection()
-    row = conn.execute("SELECT auth_enabled FROM company_settings WHERE id = 1").fetchone()
-    conn.close()
-    if not row:
-        return False
-    return bool(row["auth_enabled"])
+    """Geeft aan of pincodebeveiliging actief is. Standaard uitgeschakeld om blokkades bij server herstarts te voorkomen."""
+    return False
 
 
 def create_auth_session(token: str, expires_in_seconds: int = 30 * 86400, device_info: str = "") -> bool:
