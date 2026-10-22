@@ -16,6 +16,39 @@ from datetime import datetime, timedelta
 DB_FILE = os.path.join(os.path.dirname(__file__), "transito_tms.db")
 
 
+def safe_float(val, default=0.0):
+    if val is None or val == "":
+        return default
+    if isinstance(val, (int, float)):
+        return float(val)
+    s = str(val).strip().replace("€", "").replace("EUR", "").replace("$", "").replace(" ", "")
+    if not s:
+        return default
+    if "," in s and "." in s:
+        if s.find(".") < s.find(","):
+            s = s.replace(".", "").replace(",", ".")
+        else:
+            s = s.replace(",", "")
+    elif "," in s:
+        s = s.replace(",", ".")
+    try:
+        return float(s)
+    except Exception:
+        return default
+
+
+def safe_int(val, default=0):
+    if val is None or val == "":
+        return default
+    try:
+        if isinstance(val, int):
+            return val
+        s = str(val).split(".")[0].split(",")[0].strip()
+        return int(s)
+    except Exception:
+        return default
+
+
 def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
@@ -244,6 +277,30 @@ def init_db():
         except Exception:
             pass
 
+    # Migraties voor Auth Sessies en Pincode
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS auth_sessions (
+        token TEXT PRIMARY KEY,
+        expires_at REAL NOT NULL,
+        device_info TEXT
+    )
+    """)
+    for col_name, col_def in [
+        ("auth_pin_hash", "TEXT"),
+        ("auth_pin_salt", "TEXT"),
+        ("auth_enabled", "INTEGER DEFAULT 0")
+    ]:
+        try:
+            cursor.execute(f"ALTER TABLE company_settings ADD COLUMN {col_name} {col_def}")
+        except Exception:
+            pass
+
+    # Zet auth_enabled standaard op 0 zodat gebruikers nooit per ongeluk geblokkeerd worden
+    try:
+        cursor.execute("UPDATE company_settings SET auth_enabled = 0 WHERE id = 1")
+    except Exception:
+        pass
+
     # Controleer of er al data aanwezig is
     cursor.execute("SELECT COUNT(*) FROM company_settings")
     if cursor.fetchone()[0] == 0:
@@ -421,20 +478,20 @@ def update_company_settings(data: dict):
     """, (
         current_dict.get("name"), current_dict.get("legal_form"), current_dict.get("vat_number"), current_dict.get("fiscal_code"),
         current_dict.get("address"), current_dict.get("zip"), current_dict.get("city"), current_dict.get("province"),
-        current_dict.get("country", "IT"), current_dict.get("pec"), current_dict.get("sdi_code"), current_dict.get("regime_fiscale"),
-        current_dict.get("iban"), current_dict.get("swift"), current_dict.get("rea_number"), float(current_dict.get("capital", 100000.0)),
-        current_dict.get("sdi_provider"), int(current_dict.get("test_mode", 1)),
-        current_dict.get("principal_name"), current_dict.get("principal_country", "NL"), current_dict.get("principal_vat"),
-        current_dict.get("principal_address"), current_dict.get("principal_zip"), current_dict.get("principal_city"),
-        current_dict.get("principal_pec", ""), current_dict.get("principal_sdi", "XXXXXXX"),
-        current_dict.get("default_commission_type", "percentage"),
-        float(current_dict.get("default_commission_rate", 10.0)),
-        float(current_dict.get("default_commission_fixed", 200.0)),
-        current_dict.get("smtp_host", "smtp.gmail.com"), int(current_dict.get("smtp_port", 587)),
-        current_dict.get("smtp_security", "tls"), current_dict.get("smtp_user", ""),
-        current_dict.get("smtp_pass", ""), current_dict.get("smtp_sender_name", "Transito Intermediazioni S.r.l."),
-        current_dict.get("smtp_sender_email", ""), current_dict.get("principal_email", "administratie@veldhoventransport.nl"),
-        current_dict.get("accountant_email", "")
+        current_dict.get("country") or "IT", current_dict.get("pec") or "", current_dict.get("sdi_code") or "0000000", current_dict.get("regime_fiscale") or "RF01",
+        current_dict.get("iban") or "", current_dict.get("swift") or "", current_dict.get("rea_number") or "", safe_float(current_dict.get("capital"), 100000.0),
+        current_dict.get("sdi_provider") or "Aruba / Fatture in Cloud API Gateway", safe_int(current_dict.get("test_mode"), 1),
+        current_dict.get("principal_name") or "Veldhoven International Transport B.V.", current_dict.get("principal_country") or "NL", current_dict.get("principal_vat") or "NL854729381B01",
+        current_dict.get("principal_address") or "Transportlaan 14", current_dict.get("principal_zip") or "5504 KR", current_dict.get("principal_city") or "Veldhoven",
+        current_dict.get("principal_pec") or "", current_dict.get("principal_sdi") or "XXXXXXX",
+        current_dict.get("default_commission_type") or "percentage",
+        safe_float(current_dict.get("default_commission_rate"), 10.0),
+        safe_float(current_dict.get("default_commission_fixed"), 200.0),
+        current_dict.get("smtp_host") or "smtp.gmail.com", safe_int(current_dict.get("smtp_port"), 587),
+        current_dict.get("smtp_security") or "tls", current_dict.get("smtp_user") or "",
+        current_dict.get("smtp_pass") or "", current_dict.get("smtp_sender_name") or "Transito Intermediazioni S.r.l.",
+        current_dict.get("smtp_sender_email") or "", current_dict.get("principal_email") or "administratie@veldhoventransport.nl",
+        current_dict.get("accountant_email") or ""
     ))
     conn.commit()
     conn.close()

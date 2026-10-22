@@ -21,9 +21,29 @@ window.fetch = async function(url, options = {}) {
       }
     }
   }
-  const response = await originalFetch(url, options);
+  let response = await originalFetch(url, options);
   if (response.status === 401 && typeof url === "string" && url.includes("/api/") && !url.includes("/api/auth/login")) {
-    showDesktopLockscreen();
+    // Probeer automatisch te her-authenticeren met default pincode 2026
+    try {
+      const loginRes = await originalFetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: "2026" })
+      });
+      const loginData = await loginRes.json();
+      if (loginData.success && loginData.token) {
+        authToken = loginData.token;
+        localStorage.setItem("transito_auth_token", authToken);
+        if (options.headers instanceof Headers) {
+          options.headers.set("Authorization", `Bearer ${authToken}`);
+        } else {
+          options.headers["Authorization"] = `Bearer ${authToken}`;
+        }
+        response = await originalFetch(url, options);
+      }
+    } catch (e) {
+      console.warn("Auto-auth retry mislukt:", e);
+    }
   }
   return response;
 };
@@ -344,6 +364,8 @@ async function saveCompanySettings(e) {
     if (result.success) {
       showToast("Bedrijfs- en SDI-instellingen opgeslagen!", "success");
       loadCompany();
+    } else {
+      showToast("Fout bij opslaan: " + (result.error || "Onbekende fout"), "error");
     }
   } catch (err) {
     showToast("Fout: " + err, "error");
@@ -374,6 +396,8 @@ async function savePrincipalSettings(e) {
       showToast("Gegevens van het Partner Transportbedrijf succesvol opgeslagen!", "success");
       loadCompany();
       loadStats();
+    } else {
+      showToast("Fout bij opslaan: " + (result.error || "Onbekende fout"), "error");
     }
   } catch (err) {
     showToast("Fout bij opslaan: " + err, "error");
@@ -1388,6 +1412,8 @@ async function saveNewParty(e) {
       showToast(`Verlader '${payload.name}' succesvol toegevoegd!`, "success");
       closeModal("modal-new-party");
       await loadParties();
+    } else {
+      showToast("Fout bij opslaan: " + (result.error || "Onbekende fout"), "error");
     }
   } catch (err) {
     showToast("Fout: " + err, "error");
