@@ -60,13 +60,13 @@ function clearPin() {
 }
 
 async function submitMobilePin() {
+  const errEl = document.getElementById("mob-pin-error");
   if (enteredPin.length < 4) {
-    document.getElementById("mob-pin-error").textContent = "Voer alle 4 cijfers in";
+    if (errEl) errEl.textContent = "Voer alle 4 cijfers in";
     return;
   }
 
-  const errEl = document.getElementById("mob-pin-error");
-  errEl.textContent = "Controleren...";
+  if (errEl) errEl.textContent = "Controleren...";
 
   try {
     const res = await fetch("/api/auth/login", {
@@ -277,13 +277,69 @@ async function loadMobileOrders() {
         <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
           <span class="text-slate-500 text-[11px]">Vracht: € ${o.freight_price.toFixed(2)}</span>
           <div class="text-right">
-            <span class="font-bold text-emerald-600 text-xs">+ € ${o.commission_amount.toFixed(2)} provisie</span>
+            <span class="font-bold text-emerald-600 text-xs">+ € ${o.commission_amount.toFixed(2)}</span>
             <span class="text-[10px] font-semibold text-slate-500 block">${commTag}</span>
           </div>
+        </div>
+        <div class="flex items-center justify-between pt-1.5 border-t border-slate-100">
+          <div class="flex items-center gap-1.5">
+            <label class="text-[10px] font-semibold text-slate-500">Status:</label>
+            <select onchange="updateMobileOrderStatus(${o.id}, this.value)" class="text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none">
+              <option value="Aangemeld" ${o.status === 'Aangemeld' ? 'selected' : ''}>Aangemeld</option>
+              <option value="Onderweg" ${o.status === 'Onderweg' ? 'selected' : ''}>Onderweg</option>
+              <option value="Geleverd" ${o.status === 'Geleverd' ? 'selected' : ''}>Geleverd</option>
+              <option value="Commissie Gefactureerd" ${o.status === 'Commissie Gefactureerd' ? 'selected' : ''}>Gefactureerd</option>
+            </select>
+          </div>
+          <button onclick="deleteMobileOrder(${o.id})" class="text-slate-400 hover:text-rose-600 p-1.5 text-xs" title="Verwijderen" ${isBilled ? 'style="display:none;"' : ''}>
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
         </div>
       </div>
     `;
   }).join("");
+}
+
+async function updateMobileOrderStatus(orderId, newStatus) {
+  try {
+    const res = await authFetch(`/api/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showMobileToast(`Status gewijzigd naar '${newStatus}'`, "success");
+      await loadMobileOrders();
+      await loadMobileStats();
+    } else {
+      showMobileToast("Fout: " + (result.error || "Kon status niet bijwerken"), "error");
+    }
+  } catch (err) {
+    showMobileToast("Netwerkfout: " + err, "error");
+  }
+}
+
+async function deleteMobileOrder(orderId) {
+  const ord = (mobileOrders || []).find(o => o.id === orderId);
+  const num = ord ? ord.order_number : `rit #${orderId}`;
+  if (!confirm(`Weet je zeker dat je rit ${num} wilt verwijderen?`)) return;
+
+  try {
+    const res = await authFetch(`/api/orders/${orderId}`, {
+      method: "DELETE"
+    });
+    const result = await res.json();
+    if (result.success) {
+      showMobileToast(result.message || `Rit ${num} verwijderd`, "success");
+      await loadMobileOrders();
+      await loadMobileStats();
+    } else {
+      showMobileToast("Fout: " + (result.error || "Kon rit niet verwijderen"), "error");
+    }
+  } catch (err) {
+    showMobileToast("Netwerkfout: " + err, "error");
+  }
 }
 
 // ================= FLEXIBELE COMMISSIE MOBILE =================

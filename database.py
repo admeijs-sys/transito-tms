@@ -619,11 +619,13 @@ def get_accounting_summary():
 def verify_app_pin(entered_pin: str) -> bool:
     """Controleert of de ingevoerde pincode overeenkomt met de hash in de database."""
     import hashlib
+    if not entered_pin:
+        return False
     conn = get_db_connection()
-    row = conn.execute("SELECT auth_pin_hash, auth_pin_salt, auth_enabled FROM company_settings WHERE id = 1").fetchone()
+    row = conn.execute("SELECT auth_pin_hash, auth_pin_salt FROM company_settings WHERE id = 1").fetchone()
     conn.close()
-    if not row or not row["auth_enabled"]:
-        return True
+    if not row:
+        return entered_pin.strip() == "2026"
     
     salt = row["auth_pin_salt"] or ""
     expected_hash = row["auth_pin_hash"] or ""

@@ -488,8 +488,8 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
 
         elif path == "/api/expenses":
             cur = conn.cursor()
-            imponibile = float(body.get("imponibile", 0))
-            vat_rate = float(body.get("vat_rate", 22.0))
+            imponibile = safe_float(body.get("imponibile"), 0.0)
+            vat_rate = safe_float(body.get("vat_rate"), 22.0)
             vat_amount = round(imponibile * (vat_rate / 100.0), 2)
             total_amount = round(imponibile + vat_amount, 2)
             
@@ -502,7 +502,7 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
                 body.get("supplier_name"), body.get("supplier_vat", ""),
                 body.get("invoice_number", ""), body.get("description"),
                 body.get("account_code", "5001"), imponibile, vat_rate, vat_amount,
-                total_amount, float(body.get("vat_deductible_pct", 100.0)),
+                total_amount, safe_float(body.get("vat_deductible_pct"), 100.0),
                 body.get("payment_status", "Betaald"), body.get("payment_method", "Bonifico Bancario (MP05)")
             ))
             conn.commit()
@@ -522,10 +522,10 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
             INSERT INTO parties (type, name, country, vat_number, fiscal_code, sdi_code, pec, email, phone, address, zip, city, province, is_eu)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                body.get("type", "client"), body.get("name"), body.get("country", "IT").upper(),
+                body.get("type", "client"), body.get("name"), (body.get("country") or "IT").upper(),
                 body.get("vat_number"), body.get("fiscal_code"), body.get("sdi_code", "0000000"),
                 body.get("pec"), body.get("email"), body.get("phone"), body.get("address"),
-                body.get("zip"), body.get("city"), body.get("province"), int(body.get("is_eu", 1))
+                body.get("zip"), body.get("city"), body.get("province"), safe_int(body.get("is_eu"), 1)
             ))
             conn.commit()
             new_id = cur.lastrowid
@@ -971,21 +971,35 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
 
         if path.startswith("/api/orders/"):
             order_id = int(path.split("/")[3])
-            freight_price = safe_float(body.get("freight_price"), 0.0)
-            carrier_price = safe_float(body.get("carrier_price"), 0.0)
-            comm_type = body.get("commission_type") or "percentage"
-            comm_rate = safe_float(body.get("commission_rate"), 10.0)
-            comm_amount = safe_float(body.get("commission_amount"), 0.0)
-            if comm_amount == 0 and freight_price > 0:
-                if comm_type == "percentage":
+            existing = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+            if not existing:
+                self.send_json({"error": "Opdracht niet gevonden"}, status_code=404)
+                conn.close()
+                return
+
+            new_status = body.get("status") if ("status" in body and body.get("status") is not None) else existing["status"]
+            freight_price = safe_float(body.get("freight_price"), existing["freight_price"]) if "freight_price" in body else existing["freight_price"]
+            carrier_price = safe_float(body.get("carrier_price"), existing["carrier_price"]) if "carrier_price" in body else existing["carrier_price"]
+            comm_type = body.get("commission_type") if "commission_type" in body else (existing["commission_type"] or "percentage")
+            comm_rate = safe_float(body.get("commission_rate"), existing["commission_rate"]) if "commission_rate" in body else existing["commission_rate"]
+
+            if "commission_amount" in body and body.get("commission_amount") not in (None, ""):
+                comm_amount = safe_float(body.get("commission_amount"), existing["commission_amount"])
+            else:
+                if comm_type == "percentage" and "freight_price" in body:
                     comm_amount = round(freight_price * (comm_rate / 100.0), 2)
-                elif comm_type == "fixed":
-                    comm_amount = round(safe_float(body.get("commission_fixed"), 200.0), 2)
-                elif comm_type == "margin":
+                elif comm_type == "margin" and ("freight_price" in body or "carrier_price" in body):
                     comm_amount = round(max(0.0, freight_price - carrier_price), 2)
+                else:
+                    comm_amount = existing["commission_amount"]
 
             if freight_price > 0 and (comm_rate == 0 or comm_type != "percentage") and comm_amount > 0:
                 comm_rate = round((comm_amount / freight_price) * 100.0, 1)
+
+            cmr_number = body.get("cmr_number") if "cmr_number" in body else existing["cmr_number"]
+            pickup_date = body.get("pickup_date") if "pickup_date" in body else existing["pickup_date"]
+            delivery_date = body.get("delivery_date") if "delivery_date" in body else existing["delivery_date"]
+            notes = body.get("notes") if "notes" in body else existing["notes"]
 
             conn.execute("""
             UPDATE orders SET
@@ -993,9 +1007,8 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
                 cmr_number = ?, pickup_date = ?, delivery_date = ?, notes = ?
             WHERE id = ?
             """, (
-                body.get("status"), freight_price, carrier_price, comm_type, comm_rate, comm_amount,
-                body.get("cmr_number"), body.get("pickup_date"), body.get("delivery_date"),
-                body.get("notes"), order_id
+                new_status, freight_price, carrier_price, comm_type, comm_rate, comm_amount,
+                cmr_number, pickup_date, delivery_date, notes, order_id
             ))
             conn.commit()
             conn.close()
@@ -1018,7 +1031,7 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
                 pec = ?, email = ?, phone = ?, address = ?, zip = ?, city = ?, province = ?
             WHERE id = ?
             """, (
-                body.get("name"), body.get("country", "IT").upper(), body.get("vat_number"),
+                body.get("name"), (body.get("country") or "IT").upper(), body.get("vat_number"),
                 body.get("fiscal_code"), body.get("sdi_code"), body.get("pec"),
                 body.get("email"), body.get("phone"), body.get("address"),
                 body.get("zip"), body.get("city"), body.get("province"), party_id
@@ -1040,6 +1053,15 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
             conn.commit()
             conn.close()
             self.send_json({"success": True, "message": "Opdracht verwijderd"})
+            return
+
+        elif path.startswith("/api/invoices/"):
+            inv_id = int(path.split("/")[3])
+            conn.execute("UPDATE orders SET status = 'Geleverd', commission_invoice_id = NULL WHERE commission_invoice_id = ?", (inv_id,))
+            conn.execute("DELETE FROM invoices WHERE id = ?", (inv_id,))
+            conn.commit()
+            conn.close()
+            self.send_json({"success": True, "message": "Factuur verwijderd en gekoppelde ritten hersteld naar 'Geleverd'"})
             return
 
         elif path.startswith("/api/expenses/"):

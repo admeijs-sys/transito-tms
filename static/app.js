@@ -33,16 +33,19 @@ function hideDesktopLockscreen() {}
 function lockApp() {}
 
 async function submitDesktopPin(e) {
-  e.preventDefault();
+  if (e) e.preventDefault();
   const input = document.getElementById("desktop-pin-input");
+  if (!input) return;
   const errEl = document.getElementById("desktop-pin-error");
   const btn = document.getElementById("btn-desktop-login");
   const pin = input.value.trim();
 
   if (!pin) return;
-  errEl.textContent = "";
-  btn.disabled = true;
-  btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Controleren...`;
+  if (errEl) errEl.textContent = "";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Controleren...`;
+  }
 
   try {
     const res = await originalFetch("/api/auth/login", {
@@ -577,7 +580,12 @@ function renderOrders(orders) {
           <div class="text-[11px] text-slate-400 font-mono">${o.weight_kg ? o.weight_kg + ' kg' : ''} ${o.cmr_number ? '&bull; CMR: ' + o.cmr_number : ''}</div>
         </td>
         <td class="py-3.5 px-4">
-          ${getStatusBadge(o.status)}
+          <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs font-semibold rounded-lg px-2.5 py-1.5 border border-slate-300 bg-white text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+            <option value="Aangemeld" ${o.status === 'Aangemeld' ? 'selected' : ''}>🔵 Aangemeld</option>
+            <option value="Onderweg" ${o.status === 'Onderweg' ? 'selected' : ''}>🟠 Onderweg</option>
+            <option value="Geleverd" ${o.status === 'Geleverd' ? 'selected' : ''}>🟢 Geleverd</option>
+            <option value="Commissie Gefactureerd" ${o.status === 'Commissie Gefactureerd' ? 'selected' : ''}>🟣 Gefactureerd</option>
+          </select>
         </td>
         <td class="py-3.5 px-4 text-right">
           <div class="font-bold text-slate-900 text-xs">${formatCurrency(o.freight_price)}</div>
@@ -588,15 +596,20 @@ function renderOrders(orders) {
           <div class="mt-0.5">${getCommissionBadge(o)}</div>
         </td>
         <td class="py-3.5 px-4 text-center">
-          ${!isBilled ? `
-            <button onclick="generateSingleCommissionInvoice(${o.id})" title="Genereer SDI Factuur voor deze commissie aan ${escapeHtml(currentCompany.principal_name)}" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-1 mx-auto">
-              <i class="fa-solid fa-file-invoice"></i> Factureer
+          <div class="flex items-center justify-center gap-1.5">
+            ${!isBilled ? `
+              <button onclick="generateSingleCommissionInvoice(${o.id})" title="Genereer SDI Factuur voor deze commissie aan ${escapeHtml(currentCompany.principal_name)}" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-1">
+                <i class="fa-solid fa-file-invoice"></i> Factureer
+              </button>
+            ` : `
+              <span class="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-1 rounded border border-purple-200">
+                <i class="fa-solid fa-check mr-1"></i> Gefactureerd
+              </span>
+            `}
+            <button onclick="deleteOrder(${o.id})" title="Opdracht verwijderen" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition" ${isBilled ? 'disabled opacity-30 cursor-not-allowed' : ''}>
+              <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
-          ` : `
-            <span class="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-1 rounded border border-purple-200">
-              <i class="fa-solid fa-check mr-1"></i> Gefactureerd
-            </span>
-          `}
+          </div>
         </td>
       </tr>
     `;
@@ -715,6 +728,9 @@ function renderInvoices(invoices) {
                 <i class="fa-solid fa-check-double"></i>
               </span>
             `}
+            <button onclick="deleteInvoice(${i.id})" title="Factuur verwijderen en gekoppelde ritten herstellen" class="p-1.5 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 transition">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
           </div>
         </td>
       </tr>
@@ -1015,6 +1031,71 @@ async function generateSingleCommissionInvoice(orderId) {
   }
 }
 
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast(`Ritstatus bijgewerkt naar '${newStatus}'`, "success");
+      await loadOrders();
+      await loadStats();
+    } else {
+      showToast("Fout bij bijwerken: " + (result.error || "Onbekende fout"), "error");
+    }
+  } catch (err) {
+    showToast("Netwerkfout: " + err, "error");
+  }
+}
+
+async function deleteOrder(orderId) {
+  const ord = (globalOrders || []).find(o => o.id === orderId);
+  const num = ord ? ord.order_number : `rit #${orderId}`;
+  if (!confirm(`Weet je zeker dat je bemiddeling ${num} wilt verwijderen?`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}`, {
+      method: "DELETE"
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast(result.message || `Opdracht ${num} verwijderd`, "success");
+      await loadOrders();
+      await loadStats();
+    } else {
+      showToast("Fout bij verwijderen: " + (result.error || "Onbekende fout"), "error");
+    }
+  } catch (err) {
+    showToast("Netwerkfout: " + err, "error");
+  }
+}
+
+async function deleteInvoice(invoiceId) {
+  const inv = (globalInvoices || []).find(i => i.id === invoiceId);
+  const num = inv ? inv.invoice_number : `factuur #${invoiceId}`;
+  if (!confirm(`Weet je zeker dat je ${num} wilt verwijderen?\n\nGekoppelde ritten worden automatisch teruggezet naar 'Geleverd'.`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/invoices/${invoiceId}`, {
+      method: "DELETE"
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast(result.message || `Factuur ${num} verwijderd`, "success");
+      await loadInvoices();
+      await loadOrders();
+      await loadStats();
+    } else {
+      showToast("Fout bij verwijderen: " + (result.error || "Onbekende fout"), "error");
+    }
+  } catch (err) {
+    showToast("Netwerkfout: " + err, "error");
+  }
+}
+
 async function generateBatchCommissionInvoice() {
   const unbilled = globalOrders.filter(o => o.status !== "Commissie Gefactureerd");
   if (unbilled.length === 0) {
@@ -1043,6 +1124,71 @@ async function generateBatchCommissionInvoice() {
       switchTab("invoices");
     } else {
       showToast("Fout: " + result.error, "error");
+    }
+  } catch (err) {
+    showToast("Netwerkfout: " + err, "error");
+  }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast(`Ritstatus bijgewerkt naar '${newStatus}'`, "success");
+      await loadOrders();
+      await loadStats();
+    } else {
+      showToast("Fout bij bijwerken: " + (result.error || "Onbekende fout"), "error");
+    }
+  } catch (err) {
+    showToast("Netwerkfout: " + err, "error");
+  }
+}
+
+async function deleteOrder(orderId) {
+  const ord = (globalOrders || []).find(o => o.id === orderId);
+  const num = ord ? ord.order_number : `rit #${orderId}`;
+  if (!confirm(`Weet je zeker dat je bemiddeling ${num} wilt verwijderen?`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/orders/${orderId}`, {
+      method: "DELETE"
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast(result.message || `Opdracht ${num} verwijderd`, "success");
+      await loadOrders();
+      await loadStats();
+    } else {
+      showToast("Fout bij verwijderen: " + (result.error || "Onbekende fout"), "error");
+    }
+  } catch (err) {
+    showToast("Netwerkfout: " + err, "error");
+  }
+}
+
+async function deleteInvoice(invoiceId) {
+  const inv = (globalInvoices || []).find(i => i.id === invoiceId);
+  const num = inv ? inv.invoice_number : `factuur #${invoiceId}`;
+  if (!confirm(`Weet je zeker dat je ${num} wilt verwijderen?\n\nGekoppelde ritten worden automatisch teruggezet naar 'Geleverd'.`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/invoices/${invoiceId}`, {
+      method: "DELETE"
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast(result.message || `Factuur ${num} verwijderd`, "success");
+      await loadInvoices();
+      await loadOrders();
+      await loadStats();
+    } else {
+      showToast("Fout bij verwijderen: " + (result.error || "Onbekende fout"), "error");
     }
   } catch (err) {
     showToast("Netwerkfout: " + err, "error");
@@ -1177,11 +1323,14 @@ async function saveNewOrder(e) {
   const commAmount = parseFloat(document.getElementById("ord-comm-amount").value) || 0;
   const carrierPrice = parseFloat(document.getElementById("ord-carrier-price").value) || 0;
 
+  const clientVal = document.getElementById("ord-client") ? document.getElementById("ord-client").value : "";
+  const clientId = clientVal && !isNaN(parseInt(clientVal, 10)) ? parseInt(clientVal, 10) : null;
+
   const payload = {
-    client_id: parseInt(document.getElementById("ord-client").value),
-    origin_country: document.getElementById("ord-orig-country").value.toUpperCase(),
+    client_id: clientId,
+    origin_country: (document.getElementById("ord-orig-country").value || "NL").toUpperCase(),
     origin_city: document.getElementById("ord-orig-city").value,
-    destination_country: document.getElementById("ord-dest-country").value.toUpperCase(),
+    destination_country: (document.getElementById("ord-dest-country").value || "IT").toUpperCase(),
     destination_city: document.getElementById("ord-dest-city").value,
     goods_description: document.getElementById("ord-goods").value,
     weight_kg: parseFloat(document.getElementById("ord-weight").value) || 0,
