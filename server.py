@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import database
 import sdi_generator
 import email_sender
+import pdf_generator
 
 PORT = int(os.environ.get("PORT", 8080))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -390,7 +391,7 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
             conn.close()
             return
 
-        elif path.startswith("/api/invoices/") and not path.endswith("/xml") and not path.endswith("/sdi-send"):
+        elif path.startswith("/api/invoices/") and not path.endswith("/xml") and not path.endswith("/pdf") and not path.endswith("/sdi-send"):
             invoice_id = int(path.split("/")[3])
             row = conn.execute("SELECT * FROM invoices WHERE id = ?", (invoice_id,)).fetchone()
             if not row:
@@ -446,6 +447,70 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(xml_data)))
             self.end_headers()
             self.wfile.write(xml_data)
+            conn.close()
+            return
+
+        elif path.startswith("/api/invoices/") and path.endswith("/pdf"):
+            invoice_id = int(path.split("/")[3])
+            row = conn.execute("SELECT * FROM invoices WHERE id = ?", (invoice_id,)).fetchone()
+            if not row:
+                self.send_json({"error": "Factuur niet gevonden"}, status_code=404)
+                conn.close()
+                return
+
+            inv = dict(row)
+            company = database.get_company_settings()
+            orders = []
+            if inv.get("order_ids_json"):
+                try:
+                    oids = json.loads(inv["order_ids_json"])
+                    if oids:
+                        ph = ",".join("?" for _ in oids)
+                        orders = [dict(r) for r in conn.execute(f"SELECT * FROM orders WHERE id IN ({ph})", oids).fetchall()]
+                except Exception:
+                    pass
+
+            pdf_bytes = pdf_generator.generate_invoice_pdf(inv, company, orders)
+            clean_num = inv["invoice_number"].replace("/", "_").replace(" ", "_")
+            filename = f"Factuur_{clean_num}.pdf"
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/pdf")
+            self.send_header("Content-Disposition", f'inline; filename="{filename}"')
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(pdf_bytes)))
+            self.end_headers()
+            self.wfile.write(pdf_bytes)
+            conn.close()
+            return
+
+        elif path.startswith("/api/orders/") and path.endswith("/pdf"):
+            order_id = int(path.split("/")[3])
+            row = conn.execute("""
+            SELECT o.*, c.name as client_name, c.country as client_country, c.sdi_code as client_sdi,
+                   c.vat_number as client_vat, c.fiscal_code as client_cf, c.city as client_city
+            FROM orders o
+            LEFT JOIN parties c ON o.client_id = c.id
+            WHERE o.id = ?
+            """, (order_id,)).fetchone()
+            if not row:
+                self.send_json({"error": "Opdracht niet gevonden"}, status_code=404)
+                conn.close()
+                return
+
+            order = dict(row)
+            company = database.get_company_settings()
+            pdf_bytes = pdf_generator.generate_quote_pdf(order, company)
+            clean_num = order["order_number"].replace("/", "_").replace(" ", "_")
+            filename = f"Offerte_{clean_num}.pdf"
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/pdf")
+            self.send_header("Content-Disposition", f'inline; filename="{filename}"')
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(pdf_bytes)))
+            self.end_headers()
+            self.wfile.write(pdf_bytes)
             conn.close()
             return
 
@@ -958,8 +1023,23 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
                 """ + html_body
 
             attachments = []
+            clean_num = inv["invoice_number"].replace("/", "_").replace(" ", "_")
+
+            # 1. Genereer en voeg de officiële Factuur A4 PDF bijlage toe
+            attach_pdf = body.get("attach_pdf", True)
+            if attach_pdf:
+                try:
+                    pdf_bytes = pdf_generator.generate_invoice_pdf(inv, company, orders)
+                    attachments.append({
+                        "filename": f"Factuur_{clean_num}.pdf",
+                        "content": pdf_bytes,
+                        "mimetype": "application/pdf"
+                    })
+                except Exception as e:
+                    print(f"Fout bij PDF genereren voor e-mail: {e}")
+
+            # 2. Voeg optioneel de officiële FatturaPA XML bijlage toe
             if attach_xml and inv.get("xml_content"):
-                clean_num = inv["invoice_number"].replace("/", "_").replace(" ", "_")
                 attachments.append({
                     "filename": f"IT_PROV_{clean_num}.xml",
                     "content": inv["xml_content"].encode("utf-8"),

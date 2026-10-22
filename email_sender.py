@@ -72,10 +72,12 @@ def send_email_smtp(to_email: str, subject: str, html_content: str, text_content
             msg_alternative.attach(MIMEText(html_content, "html", "utf-8"))
         msg.attach(msg_alternative)
 
-        # Bijlagen toevoegen
+        # Bijlagen toevoegen (PDF, XML, etc.)
         if attachments:
             for att in attachments:
-                part = MIMEBase("application", "octet-stream")
+                mtype = att.get("mimetype", "application/octet-stream")
+                maintype, subtype = mtype.split("/", 1) if "/" in mtype else ("application", "octet-stream")
+                part = MIMEBase(maintype, subtype)
                 content = att.get("content")
                 if isinstance(content, str):
                     content = content.encode("utf-8")

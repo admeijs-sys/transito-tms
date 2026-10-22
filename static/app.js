@@ -739,10 +739,13 @@ function renderInvoices(invoices) {
         </td>
         <td class="py-3.5 px-4 text-center">
           <div class="flex items-center justify-center gap-1.5">
-            <button onclick="viewInvoiceTemplate(${i.id})" title="Bekijk en print factuur sjabloon (PDF)" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-xs font-semibold shadow-sm transition-colors flex items-center gap-1 border border-indigo-200">
+            <button onclick="viewInvoiceTemplate(${i.id})" title="Bekijk en print factuur sjabloon" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded text-xs font-semibold shadow-sm transition-colors flex items-center gap-1 border border-indigo-200">
               <i class="fa-solid fa-file-invoice"></i> Sjabloon
             </button>
-            <button onclick="openSendEmailModal(${i.id})" title="Verstuur factuur en XML per e-mail" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs font-semibold shadow-sm transition-colors flex items-center gap-1 border border-blue-200">
+            <a href="${API_BASE}/invoices/${i.id}/pdf" download title="Download officiële Factuur als PDF" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded text-xs font-semibold shadow-sm transition-colors flex items-center gap-1 border border-emerald-200">
+              <i class="fa-solid fa-file-pdf text-rose-600"></i> PDF
+            </a>
+            <button onclick="openSendEmailModal(${i.id})" title="Verstuur factuur PDF en XML per e-mail" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs font-semibold shadow-sm transition-colors flex items-center gap-1 border border-blue-200">
               <i class="fa-solid fa-envelope text-[10px]"></i> E-mail
             </button>
             <button onclick="viewInvoiceXml(${i.id})" title="Bekijk officiële FatturaPA XML" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors">
@@ -1441,6 +1444,10 @@ async function viewOrderQuote(orderId) {
 
     // Header modal
     document.getElementById("quote-modal-title").textContent = `Offerte ${quoteNum}`;
+    const dlQuoteBtn = document.getElementById("btn-download-quote-pdf");
+    if (dlQuoteBtn) {
+      dlQuoteBtn.href = `${API_BASE}/orders/${o.id}/pdf`;
+    }
     const badgeEl = document.getElementById("quote-modal-status-badge");
     if (badgeEl) {
       badgeEl.textContent = o.status;
@@ -1663,6 +1670,10 @@ async function viewInvoiceTemplate(invoiceId) {
 
     // Header modal
     document.getElementById("tpl-modal-inv-num").textContent = `Factuur ${inv.invoice_number}`;
+    const dlInvBtn = document.getElementById("btn-download-inv-pdf");
+    if (dlInvBtn) {
+      dlInvBtn.href = `${API_BASE}/invoices/${inv.id}/pdf`;
+    }
     const badgeEl = document.getElementById("tpl-modal-sdi-badge");
     if (badgeEl) {
       badgeEl.textContent = `SDI: ${inv.sdi_status}`;
@@ -1978,7 +1989,8 @@ async function submitSendEmail(e) {
     cc_email: document.getElementById("mail-cc").value,
     subject: document.getElementById("mail-subject").value,
     message: document.getElementById("mail-message").value,
-    attach_xml: document.getElementById("mail-attach-xml").checked
+    attach_pdf: document.getElementById("mail-attach-pdf") ? document.getElementById("mail-attach-pdf").checked : true,
+    attach_xml: document.getElementById("mail-attach-xml") ? document.getElementById("mail-attach-xml").checked : true
   };
 
   try {
