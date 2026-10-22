@@ -14,18 +14,34 @@
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
+    html, body {
+      overflow-x: hidden;
+      width: 100%;
+      position: relative;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
+    /* Voorkom iOS Safari auto-zoom op tekstvelden */
+    input, select, textarea {
+      font-size: 16px !important;
+    }
     .safe-bottom {
-      padding-bottom: env(safe-area-inset-bottom, 1rem);
+      padding-bottom: max(env(safe-area-inset-bottom, 0.75rem), 0.75rem);
     }
     .mobile-tab-btn.active {
       color: #2563eb;
     }
     .mobile-tab-btn.active i {
-      transform: scale(1.1);
+      transform: scale(1.15);
+    }
+    /* Verberg vaste balk als het virtuele toetsenbord open staat op mobiel */
+    @media (max-height: 480px) {
+      nav.fixed {
+        display: none !important;
+      }
+      header.sticky {
+        position: relative !important;
+      }
     }
   </style>
 </head>
@@ -45,7 +61,7 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <a href="/" title="Open Volledig Kantoordashboard" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-xs text-white transition">
+      <a href="/" onclick="sessionStorage.setItem('view_as_desktop', '1')" title="Open Volledig Kantoordashboard" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-xs text-white transition">
         <i class="fa-solid fa-desktop"></i>
       </a>
       <button onclick="refreshMobileData()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-xs text-white transition">
@@ -55,7 +71,7 @@
   </header>
 
   <!-- Main Content Area -->
-  <main class="flex-1 p-4 max-w-lg mx-auto w-full pb-24">
+  <main class="flex-1 p-3 sm:p-4 max-w-md mx-auto w-full pb-32">
 
     <!-- ================= VIEW 1: NIEUWE BEMIDDELING ================= -->
     <section id="view-new-order" class="space-y-4">
