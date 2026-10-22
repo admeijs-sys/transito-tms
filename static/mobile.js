@@ -200,14 +200,17 @@ function renderMobileRecentOrders() {
     else if (o.status === "Gefactureerd" || o.status === "Commissie Gefactureerd") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">Gefactureerd</span>`;
 
     return `
-      <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
-        <div class="truncate max-w-[180px]">
-          <span class="font-bold text-slate-900 block truncate">${o.client_name || 'Verlader'}</span>
-          <span class="text-[11px] text-slate-500">${o.origin_city || '?'} &rarr; ${o.destination_city || '?'}</span>
+      <div onclick="viewMobileQuote(${o.id})" class="p-3 rounded-xl bg-slate-50 hover:bg-slate-100 active:scale-[0.98] border border-slate-200/80 flex items-center justify-between text-xs cursor-pointer transition shadow-xs">
+        <div class="truncate max-w-[190px]">
+          <span class="font-bold text-slate-900 block truncate">${escapeHtml(o.client_name || 'Verlader')}</span>
+          <span class="text-[11px] text-slate-500">${escapeHtml(o.origin_city || '?')} &rarr; ${escapeHtml(o.destination_city || '?')}</span>
         </div>
-        <div class="text-right shrink-0">
-          <span class="font-bold text-slate-800 block text-xs">€ ${(o.freight_price || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          ${statusBadge}
+        <div class="text-right shrink-0 flex items-center gap-2">
+          <div>
+            <span class="font-bold text-slate-800 block text-xs">€ ${(o.freight_price || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            ${statusBadge}
+          </div>
+          <i class="fa-solid fa-chevron-right text-slate-400 text-xs pointer-events-none"></i>
         </div>
       </div>
     `;
@@ -280,31 +283,25 @@ async function loadMobileOrders() {
                         o.status === 'Onderweg' ? 'bg-amber-100 text-amber-800' :
                         o.status === 'Geleverd' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800';
 
-    const commType = o.commission_type || 'percentage';
-    let commTag = `${o.commission_rate}% fee`;
-    if (commType === 'fixed') commTag = 'Vaste fee';
-    else if (commType === 'margin') commTag = `Marge (${o.commission_rate}%)`;
-    else if (commType === 'custom') commTag = `Vrij (${o.commission_rate}%)`;
-
     return `
-      <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200/90 space-y-2">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/90 space-y-3">
         <div class="flex items-center justify-between">
           <span class="font-mono font-bold text-xs text-slate-900">${o.order_number}</span>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor}">${o.status}</span>
         </div>
         <div class="text-xs font-bold text-slate-800">${escapeHtml(o.client_name || 'Verlader')}</div>
-        <div class="flex items-center gap-1.5 text-xs font-medium text-slate-700 bg-slate-50 p-2 rounded-lg">
+        <div class="flex items-center gap-1.5 text-xs font-medium text-slate-700 bg-slate-50 p-2.5 rounded-xl">
           <span class="font-bold text-blue-600">${o.origin_country}</span> ${escapeHtml(o.origin_city)}
           <i class="fa-solid fa-arrow-right text-[10px] text-slate-400"></i>
           <span class="font-bold text-emerald-600">${o.destination_country}</span> ${escapeHtml(o.destination_city)}
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
-          <span class="text-slate-500 text-[11px]">Vrachtprijs</span>
-          <span class="font-bold text-slate-900 text-xs">€ ${(o.freight_price || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span class="text-slate-500 text-xs">Vrachtprijs:</span>
+          <span class="font-bold text-slate-900 text-sm">€ ${(o.freight_price || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
-        <div class="flex items-center justify-between pt-1.5 border-t border-slate-100">
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
           <div class="flex items-center gap-1.5">
-            <select onchange="updateMobileOrderStatus(${o.id}, this.value)" class="text-xs font-bold py-1 px-2 rounded-lg border border-slate-300 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none">
+            <select onchange="updateMobileOrderStatus(${o.id}, this.value)" class="text-xs font-bold py-2 px-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none cursor-pointer">
               <option value="Offerte" ${o.status === 'Offerte' ? 'selected' : ''}>📋 Offerte</option>
               <option value="Aangemeld" ${o.status === 'Aangemeld' ? 'selected' : ''}>Aangemeld</option>
               <option value="Onderweg" ${o.status === 'Onderweg' ? 'selected' : ''}>Onderweg</option>
@@ -313,15 +310,25 @@ async function loadMobileOrders() {
             </select>
           </div>
           <div class="flex items-center gap-1.5">
-            <button onclick="viewMobileQuote(${o.id})" class="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-[10px] font-bold flex items-center gap-1 shadow-sm transition">
+            <button type="button" onclick="viewMobileQuote(${o.id})" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition cursor-pointer">
               <i class="fa-solid fa-file-contract"></i> Offerte
             </button>
+            <a href="/api/orders/${o.id}/pdf" download class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center active:scale-95 transition cursor-pointer" title="Download A4 PDF">
+              <i class="fa-solid fa-file-pdf text-amber-600"></i>
+            </a>
             ${o.status === 'Offerte' ? `
-              <button onclick="acceptMobileQuoteDirect(${o.id})" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm transition">
-                <i class="fa-solid fa-check"></i>
+              <button type="button" onclick="quickEmailMobileQuote(${o.id})" title="Direct naar admeijs@gmail.com mailen" class="p-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold flex items-center justify-center active:scale-95 transition cursor-pointer">
+                <i class="fa-solid fa-paper-plane"></i>
               </button>
-            ` : ''}
-            <button onclick="deleteMobileOrder(${o.id})" class="text-slate-400 hover:text-rose-600 p-1.5 text-xs" title="Verwijderen" ${isBilled ? 'style="display:none;"' : ''}>
+              <button type="button" onclick="acceptMobileQuoteDirect(${o.id})" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 transition cursor-pointer">
+                <i class="fa-solid fa-check"></i> Accepteer
+              </button>
+            ` : (!isBilled && o.status === 'Geleverd' ? `
+              <button type="button" onclick="generateMobileCommissionInvoice(${o.id})" class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 transition cursor-pointer">
+                <i class="fa-solid fa-file-invoice"></i> Factureer
+              </button>
+            ` : '')}
+            <button type="button" onclick="deleteMobileOrder(${o.id})" class="text-slate-400 hover:text-rose-600 p-2.5 text-xs rounded-xl hover:bg-rose-50 active:scale-95 transition cursor-pointer" title="Verwijderen" ${isBilled ? 'style="display:none;"' : ''}>
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
@@ -487,17 +494,73 @@ function onMobileDirectCommissionInput() {
 let currentMobileQuoteOrder = null;
 
 function submitMobileOrderAs(status) {
-  const form = document.getElementById("mobile-order-form");
-  if (!form.checkValidity()) {
-    form.reportValidity();
+  // Verwijder eerdere foutmarkeringen
+  ["mob-client", "mob-orig-city", "mob-dest-city", "mob-freight"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("border-red-500", "ring-2", "ring-red-400");
+  });
+
+  const clientVal = document.getElementById("mob-client") ? document.getElementById("mob-client").value : "";
+  const origCity = document.getElementById("mob-orig-city") ? document.getElementById("mob-orig-city").value.trim() : "";
+  const destCity = document.getElementById("mob-dest-city") ? document.getElementById("mob-dest-city").value.trim() : "";
+  const freight = parseFloat(document.getElementById("mob-freight")?.value) || 0;
+
+  if (!clientVal) {
+    const el = document.getElementById("mob-client");
+    if (el) {
+      el.classList.add("border-red-500", "ring-2", "ring-red-400");
+      el.focus();
+    }
+    showMobileToast("Kies a.u.b. eerst een verlader of maak er een aan met '+ Nieuwe Verlader'", "error");
     return;
   }
+
+  if (!origCity) {
+    const el = document.getElementById("mob-orig-city");
+    if (el) {
+      el.classList.add("border-red-500", "ring-2", "ring-red-400");
+      el.focus();
+    }
+    showMobileToast("Vul a.u.b. de laadplaats in (bijv. Tilburg)", "error");
+    return;
+  }
+
+  if (!destCity) {
+    const el = document.getElementById("mob-dest-city");
+    if (el) {
+      el.classList.add("border-red-500", "ring-2", "ring-red-400");
+      el.focus();
+    }
+    showMobileToast("Vul a.u.b. de losplaats in (bijv. Verona)", "error");
+    return;
+  }
+
+  if (freight <= 0) {
+    const el = document.getElementById("mob-freight");
+    if (el) {
+      el.classList.add("border-red-500", "ring-2", "ring-red-400");
+      el.focus();
+    }
+    showMobileToast("Vul a.u.b. het vrachttarief van de verlader in", "error");
+    return;
+  }
+
   submitMobileOrder(null, status);
 }
 
 async function submitMobileOrder(e, explicitStatus) {
   if (e && e.preventDefault) e.preventDefault();
   const targetStatus = explicitStatus || "Aangemeld";
+
+  const btnOfferte = document.getElementById("mob-btn-submit-offerte");
+  const btnOrder = document.getElementById("mob-btn-submit-order");
+  const activeBtn = targetStatus === "Offerte" ? btnOfferte : btnOrder;
+
+  if (btnOfferte) btnOfferte.disabled = true;
+  if (btnOrder) btnOrder.disabled = true;
+  if (activeBtn) {
+    activeBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs pointer-events-none"></i> <span class="pointer-events-none">Verwerken...</span>`;
+  }
 
   const freight = parseFloat(document.getElementById("mob-freight").value) || 0;
   const commType = currentMobileCommissionMode;
@@ -511,19 +574,21 @@ async function submitMobileOrder(e, explicitStatus) {
   const payload = {
     client_id: clientId,
     origin_country: (document.getElementById("mob-orig-country").value || "NL").toUpperCase(),
-    origin_city: document.getElementById("mob-orig-city").value,
+    origin_city: document.getElementById("mob-orig-city").value.trim(),
     destination_country: (document.getElementById("mob-dest-country").value || "IT").toUpperCase(),
-    destination_city: document.getElementById("mob-dest-city").value,
-    goods_description: document.getElementById("mob-goods").value,
+    destination_city: document.getElementById("mob-dest-city").value.trim(),
+    goods_description: document.getElementById("mob-goods").value.trim() || "Diverse handelsgoederen (FTL)",
     weight_kg: parseFloat(document.getElementById("mob-weight").value) || 0,
-    cmr_number: document.getElementById("mob-cmr").value,
+    cmr_number: document.getElementById("mob-cmr").value.trim(),
     freight_price: freight,
     carrier_price: carrierPrice,
     commission_type: commType,
     commission_rate: commRate,
     commission_amount: commAmount,
     pickup_date: document.getElementById("mob-pickup-date").value || new Date().toISOString().split("T")[0],
-    status: targetStatus
+    status: targetStatus,
+    auto_email_quote: true,
+    send_email_copy: true
   };
 
   try {
@@ -535,9 +600,15 @@ async function submitMobileOrder(e, explicitStatus) {
     const result = await res.json();
     if (result.success) {
       if (navigator.vibrate) navigator.vibrate(80);
-      showMobileToast(targetStatus === 'Offerte' ? `Offerte ${result.order_number} aangemaakt!` : `Opdracht ${result.order_number} aangemeld!`, "success");
+      const emailNote = result.email_sent ? " (Offerte A4 PDF verzonden naar admeijs@gmail.com)" : "";
+      showMobileToast(targetStatus === 'Offerte' ? `Offerte ${result.order_number} aangemaakt!${emailNote}` : `Opdracht ${result.order_number} aangemeld!`, "success");
+      
       document.getElementById("mobile-order-form").reset();
+      document.getElementById("mob-orig-country").value = "NL";
+      document.getElementById("mob-dest-country").value = "IT";
+      document.getElementById("mob-goods").value = "Diverse handelsgoederen (FTL)";
       document.getElementById("mob-pickup-date").value = new Date().toISOString().split("T")[0];
+      
       if (mobileCompany.default_commission_type) {
         setMobileCommissionMode(mobileCompany.default_commission_type);
       } else {
@@ -545,6 +616,7 @@ async function submitMobileOrder(e, explicitStatus) {
       }
       calcMobileCommission();
       await loadMobileOrders();
+      await loadMobileStats();
 
       if (targetStatus === 'Offerte' && result.id) {
         viewMobileQuote(result.id);
@@ -556,6 +628,15 @@ async function submitMobileOrder(e, explicitStatus) {
     }
   } catch (err) {
     showMobileToast("Netwerkfout: " + err, "error");
+  } finally {
+    if (btnOfferte) {
+      btnOfferte.disabled = false;
+      btnOfferte.innerHTML = '<i class="fa-solid fa-file-contract text-xs pointer-events-none"></i> <span class="pointer-events-none">Als Offerte</span>';
+    }
+    if (btnOrder) {
+      btnOrder.disabled = false;
+      btnOrder.innerHTML = '<i class="fa-solid fa-paper-plane text-xs pointer-events-none"></i> <span class="pointer-events-none">Rit Aanmelden</span>';
+    }
   }
 }
 
@@ -574,6 +655,11 @@ async function viewMobileQuote(orderId) {
     document.getElementById("mob-quote-subtitle").textContent = `Dossier: ${o.order_number}`;
     document.getElementById("mob-quote-status").textContent = o.status === 'Offerte' ? '📋 Offerte (Vrijblijvend)' : `🔵 ${o.status}`;
     document.getElementById("mob-quote-valid").textContent = "14 dagen geldig";
+
+    const pdfBtn = document.getElementById("mob-btn-download-pdf");
+    if (pdfBtn) {
+      pdfBtn.href = `/api/orders/${o.id}/pdf`;
+    }
 
     document.getElementById("mob-quote-client").textContent = o.client_name || "Verlader";
     document.getElementById("mob-quote-client-details").textContent = `${o.client_city || ''} (${o.client_country || ''}) • BTW: ${o.client_vat || '—'}`;
@@ -615,8 +701,10 @@ async function acceptMobileQuoteDirect(orderId) {
     });
     const result = await res.json();
     if (result.success) {
+      if (navigator.vibrate) navigator.vibrate(50);
       showMobileToast("Offerte geaccepteerd! De rit is nu Aangemeld.", "success");
       await loadMobileOrders();
+      await loadMobileStats();
     } else {
       showMobileToast("Fout: " + (result.error || "Kon niet bijwerken"), "error");
     }
@@ -631,7 +719,7 @@ async function acceptMobileQuote() {
   closeMobileQuoteModal();
 }
 
-function shareMobileQuote() {
+async function shareMobileQuote() {
   if (!currentMobileQuoteOrder) return;
   const o = currentMobileQuoteOrder;
   const numPart = (o.order_number || "").split("-").pop() || "001";
@@ -640,14 +728,61 @@ function shareMobileQuote() {
   const shareText = `Vrachtofferte ${quoteNum} (${o.origin_country}-${o.origin_city} -> ${o.destination_country}-${o.destination_city}) voor € ${o.freight_price.toFixed(2)} excl. btw conform CMR. Transito Intermediazioni S.r.l.`;
 
   if (navigator.share) {
-    navigator.share({
-      title: `Offerte ${quoteNum}`,
-      text: shareText
-    }).catch(() => {});
-  } else {
-    const subject = encodeURIComponent(`Offerte ${quoteNum} - ${o.origin_city} naar ${o.destination_city}`);
-    const body = encodeURIComponent(shareText);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    try {
+      await navigator.share({
+        title: `Offerte ${quoteNum}`,
+        text: shareText
+      });
+      return;
+    } catch (e) {
+      // Annulering of fout in navigator.share -> val terug
+    }
+  }
+
+  // Fallback direct naar WhatsApp
+  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+  window.open(waUrl, "_blank");
+}
+
+async function quickEmailMobileQuote(orderId) {
+  showMobileToast("Offerte A4 PDF wordt verzonden naar admeijs@gmail.com...", "success");
+  try {
+    const res = await authFetch(`/api/orders/${orderId}/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to_email: "admeijs@gmail.com" })
+    });
+    const result = await res.json();
+    if (result.success) {
+      if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+      showMobileToast("Offerte met A4 PDF succesvol verzonden naar admeijs@gmail.com!", "success");
+    } else {
+      showMobileToast("Fout: " + (result.error || "Kon niet verzenden"), "error");
+    }
+  } catch (err) {
+    showMobileToast("Netwerkfout: " + err, "error");
+  }
+}
+
+async function generateMobileCommissionInvoice(orderId) {
+  try {
+    showMobileToast("SDI commissiefactuur wordt aangemaakt...", "success");
+    const res = await authFetch("/api/invoices/generate-commission", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order_id: orderId })
+    });
+    const result = await res.json();
+    if (result.success) {
+      if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+      showMobileToast(`Commissiefactuur ${result.invoice_number} succesvol aangemaakt!`, "success");
+      await loadMobileOrders();
+      await loadMobileStats();
+    } else {
+      showMobileToast("Fout: " + (result.error || "Kon factuur niet aanmaken"), "error");
+    }
+  } catch (err) {
+    showMobileToast("Netwerkfout: " + err, "error");
   }
 }
 
@@ -690,11 +825,16 @@ async function submitMobileClient(e) {
   e.preventDefault();
   const payload = {
     type: "client",
-    name: document.getElementById("mob-new-name").value,
-    country: document.getElementById("mob-new-country").value.toUpperCase(),
-    vat_number: document.getElementById("mob-new-vat").value,
-    city: document.getElementById("mob-new-city").value
+    name: document.getElementById("mob-new-name").value.trim(),
+    country: (document.getElementById("mob-new-country").value || "IT").toUpperCase(),
+    vat_number: document.getElementById("mob-new-vat").value.trim(),
+    city: document.getElementById("mob-new-city").value.trim()
   };
+
+  if (!payload.name) {
+    showMobileToast("Vul a.u.b. een bedrijfsnaam in", "error");
+    return;
+  }
 
   try {
     const res = await authFetch("/api/parties", {
@@ -704,9 +844,14 @@ async function submitMobileClient(e) {
     });
     const result = await res.json();
     if (result.success) {
+      if (navigator.vibrate) navigator.vibrate(50);
       showMobileToast(`Verlader '${payload.name}' opgeslagen!`, "success");
       await loadMobileClients();
-      document.getElementById("mob-client").value = result.id;
+      const clientSelect = document.getElementById("mob-client");
+      if (clientSelect) clientSelect.value = result.id;
+      document.getElementById("mob-new-name").value = "";
+      document.getElementById("mob-new-vat").value = "";
+      document.getElementById("mob-new-city").value = "";
       switchMobileView("view-new-order");
     } else {
       showMobileToast("Fout: " + (result.error || "Onbekende fout"), "error");
@@ -736,6 +881,14 @@ function switchMobileView(viewId) {
   if (viewId === "view-orders-list" && document.getElementById("tab-btn-list")) document.getElementById("tab-btn-list").classList.add("active");
   if (viewId === "view-new-client" && document.getElementById("tab-btn-client")) document.getElementById("tab-btn-client").classList.add("active");
 
+  if (viewId === "view-orders-list") {
+    loadMobileOrders();
+  } else if (viewId === "view-dashboard") {
+    loadMobileStats();
+  } else if (viewId === "view-new-order") {
+    loadMobileClients();
+  }
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -746,9 +899,9 @@ function showMobileToast(msg, type = "success") {
 
   text.textContent = msg;
   if (type === "error") {
-    content.className = "bg-red-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-2.5 border border-red-700";
+    content.className = "bg-rose-950 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2.5 border border-rose-700";
   } else {
-    content.className = "bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-2.5 border border-slate-700";
+    content.className = "bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-medium flex items-center gap-2.5 border border-slate-700";
   }
 
   toast.classList.remove("-translate-y-24", "opacity-0");

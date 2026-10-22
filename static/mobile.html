@@ -88,11 +88,11 @@
       </div>
     </div>
     <div class="flex items-center gap-2 shrink-0">
-      <a href="/" onclick="sessionStorage.setItem('view_as_desktop', '1')" title="Open Volledig Kantoordashboard" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-xs text-white transition">
-        <i class="fa-solid fa-desktop"></i>
+      <a href="/" onclick="sessionStorage.setItem('view_as_desktop', '1')" title="Open Volledig Kantoordashboard" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-sm text-white transition cursor-pointer">
+        <i class="fa-solid fa-desktop pointer-events-none"></i>
       </a>
-      <button onclick="refreshMobileData()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-xs text-white transition">
-        <i class="fa-solid fa-rotate-right" id="refresh-icon"></i>
+      <button type="button" onclick="refreshMobileData()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-sm text-white transition cursor-pointer" title="Vernieuwen">
+        <i class="fa-solid fa-rotate-right pointer-events-none" id="refresh-icon"></i>
       </button>
     </div>
   </header>
@@ -114,23 +114,23 @@
         </button>
       </div>
 
-      <!-- 3 Compacte Operationele KPI Tegels -->
+      <!-- 3 Compacte Operationele KPI Tegels (Aanklikbaar) -->
       <div class="grid grid-cols-3 gap-2 sm:gap-3">
-        <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center">
-          <i class="fa-solid fa-truck-fast text-blue-600 text-base sm:text-lg mb-1"></i>
-          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold block truncate">Actief</span>
-          <span id="mob-stat-active-orders" class="text-xs sm:text-sm font-bold text-slate-800">0</span>
-        </div>
-        <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center">
-          <i class="fa-solid fa-boxes-stacked text-indigo-600 text-base sm:text-lg mb-1"></i>
-          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold block truncate">Totaal Ritten</span>
-          <span id="mob-stat-total-orders" class="text-xs sm:text-sm font-bold text-slate-800">0</span>
-        </div>
-        <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center">
-          <i class="fa-solid fa-file-invoice-dollar text-emerald-600 text-base sm:text-lg mb-1"></i>
-          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold block truncate">SDI Facturen</span>
-          <span id="mob-stat-invoices" class="text-xs sm:text-sm font-bold text-emerald-700">0</span>
-        </div>
+        <button type="button" onclick="switchMobileView('view-orders-list')" class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center active:scale-95 transition hover:bg-slate-50 cursor-pointer">
+          <i class="fa-solid fa-truck-fast text-blue-600 text-base sm:text-lg mb-1 pointer-events-none"></i>
+          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold block truncate pointer-events-none">Actief</span>
+          <span id="mob-stat-active-orders" class="text-xs sm:text-sm font-bold text-slate-800 pointer-events-none">0</span>
+        </button>
+        <button type="button" onclick="switchMobileView('view-orders-list')" class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center active:scale-95 transition hover:bg-slate-50 cursor-pointer">
+          <i class="fa-solid fa-boxes-stacked text-indigo-600 text-base sm:text-lg mb-1 pointer-events-none"></i>
+          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold block truncate pointer-events-none">Totaal Ritten</span>
+          <span id="mob-stat-total-orders" class="text-xs sm:text-sm font-bold text-slate-800 pointer-events-none">0</span>
+        </button>
+        <button type="button" onclick="switchMobileView('view-orders-list')" class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center active:scale-95 transition hover:bg-slate-50 cursor-pointer">
+          <i class="fa-solid fa-file-invoice-dollar text-emerald-600 text-base sm:text-lg mb-1 pointer-events-none"></i>
+          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold block truncate pointer-events-none">SDI Facturen</span>
+          <span id="mob-stat-invoices" class="text-xs sm:text-sm font-bold text-emerald-700 pointer-events-none">0</span>
+        </button>
       </div>
 
       <!-- Recente Bemiddelingen Mini-lijst -->
@@ -165,11 +165,11 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="block text-xs font-semibold text-slate-700">Verlader (Opdrachtgever) *</label>
-              <button type="button" onclick="switchMobileView('view-new-client')" class="text-[11px] font-semibold text-blue-600 hover:text-blue-800">
+              <button type="button" onclick="switchMobileView('view-new-client')" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-lg transition active:scale-95 cursor-pointer">
                 + Nieuwe Verlader
               </button>
             </div>
-            <select id="mob-client" required class="w-full text-sm p-3 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <select id="mob-client" class="w-full text-sm p-3 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
               <!-- Dynamisch gevuld -->
             </select>
           </div>
@@ -181,22 +181,22 @@
             <!-- Laadlocatie -->
             <div class="space-y-1">
               <span class="text-xs font-semibold text-blue-700 flex items-center gap-1">
-                <i class="fa-solid fa-location-dot"></i> Laadlocatie (Van)
+                <i class="fa-solid fa-location-dot"></i> Laadlocatie (Van) *
               </span>
               <div class="grid grid-cols-3 gap-2">
-                <input type="text" id="mob-orig-country" required placeholder="NL" maxlength="2" class="p-2.5 text-sm bg-white border border-slate-300 rounded-lg text-center font-bold uppercase">
-                <input type="text" id="mob-orig-city" required placeholder="Plaatsnaam" class="col-span-2 p-2.5 text-sm bg-white border border-slate-300 rounded-lg">
+                <input type="text" id="mob-orig-country" value="NL" placeholder="NL" maxlength="2" class="p-2.5 text-sm bg-white border border-slate-300 rounded-lg text-center font-bold uppercase">
+                <input type="text" id="mob-orig-city" placeholder="Plaatsnaam (bijv. Tilburg)" class="col-span-2 p-2.5 text-sm bg-white border border-slate-300 rounded-lg">
               </div>
             </div>
 
             <!-- Loslocatie -->
             <div class="space-y-1">
               <span class="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-                <i class="fa-solid fa-flag-checkered"></i> Loslocatie (Naar)
+                <i class="fa-solid fa-flag-checkered"></i> Loslocatie (Naar) *
               </span>
               <div class="grid grid-cols-3 gap-2">
-                <input type="text" id="mob-dest-country" required placeholder="IT" maxlength="2" class="p-2.5 text-sm bg-white border border-slate-300 rounded-lg text-center font-bold uppercase">
-                <input type="text" id="mob-dest-city" required placeholder="Plaatsnaam" class="col-span-2 p-2.5 text-sm bg-white border border-slate-300 rounded-lg">
+                <input type="text" id="mob-dest-country" value="IT" placeholder="IT" maxlength="2" class="p-2.5 text-sm bg-white border border-slate-300 rounded-lg text-center font-bold uppercase">
+                <input type="text" id="mob-dest-city" placeholder="Plaatsnaam (bijv. Verona)" class="col-span-2 p-2.5 text-sm bg-white border border-slate-300 rounded-lg">
               </div>
             </div>
           </div>
@@ -204,8 +204,8 @@
           <!-- Lading & Gewicht -->
           <div class="grid grid-cols-2 gap-2.5">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">Lading / Goederen *</label>
-              <input type="text" id="mob-goods" required placeholder="bijv. Levensmiddelen" class="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white">
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Lading / Goederen</label>
+              <input type="text" id="mob-goods" value="Diverse handelsgoederen (FTL)" placeholder="bijv. Levensmiddelen" class="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">Gewicht (kg)</label>
@@ -226,17 +226,17 @@
             </div>
 
             <!-- Commissiemodel Knoppen -->
-            <div class="grid grid-cols-4 gap-1 p-1 bg-white rounded-xl border border-slate-200 text-[11px] font-bold">
-              <button type="button" id="mob-btn-pct" onclick="setMobileCommissionMode('percentage')" class="py-1.5 rounded-lg bg-blue-600 text-white text-center">
+            <div class="grid grid-cols-4 gap-1 p-1 bg-white rounded-xl border border-slate-200 text-xs font-bold">
+              <button type="button" id="mob-btn-pct" onclick="setMobileCommissionMode('percentage')" class="py-2 rounded-lg bg-blue-600 text-white text-center cursor-pointer transition">
                 % Perc
               </button>
-              <button type="button" id="mob-btn-fixed" onclick="setMobileCommissionMode('fixed')" class="py-1.5 rounded-lg text-slate-600 hover:text-slate-900 text-center">
+              <button type="button" id="mob-btn-fixed" onclick="setMobileCommissionMode('fixed')" class="py-2 rounded-lg text-slate-600 hover:text-slate-900 text-center cursor-pointer transition">
                 € Vast
               </button>
-              <button type="button" id="mob-btn-margin" onclick="setMobileCommissionMode('margin')" class="py-1.5 rounded-lg text-slate-600 hover:text-slate-900 text-center">
+              <button type="button" id="mob-btn-margin" onclick="setMobileCommissionMode('margin')" class="py-2 rounded-lg text-slate-600 hover:text-slate-900 text-center cursor-pointer transition">
                 ⇄ Marge
               </button>
-              <button type="button" id="mob-btn-custom" onclick="setMobileCommissionMode('custom')" class="py-1.5 rounded-lg text-slate-600 hover:text-slate-900 text-center">
+              <button type="button" id="mob-btn-custom" onclick="setMobileCommissionMode('custom')" class="py-2 rounded-lg text-slate-600 hover:text-slate-900 text-center cursor-pointer transition">
                 ✎ Vrij
               </button>
             </div>
@@ -245,7 +245,7 @@
             <!-- Vrachttarief Verlader -->
             <div>
               <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Vrachttarief Verlader (€) *</label>
-              <input type="number" id="mob-freight" step="0.01" inputmode="decimal" required placeholder="2450.00" oninput="calcMobileCommission()" class="w-full text-base font-bold p-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-mono shadow-inner">
+              <input type="number" id="mob-freight" step="0.01" inputmode="decimal" placeholder="2450.00" oninput="calcMobileCommission()" class="w-full text-base font-bold p-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-mono shadow-inner">
             </div>
 
             <!-- Modus Afhankelijke Invoer -->
@@ -254,10 +254,10 @@
               <div class="flex items-center justify-between">
                 <label class="text-[11px] font-semibold text-slate-700">Percentage (%)</label>
                 <div class="flex gap-1">
-                  <button type="button" onclick="setMobileRate(5)" class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold">5%</button>
-                  <button type="button" onclick="setMobileRate(7.5)" class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold">7.5%</button>
-                  <button type="button" onclick="setMobileRate(10)" class="px-2 py-0.5 bg-blue-100 border border-blue-300 rounded text-[10px] font-bold text-blue-800">10%</button>
-                  <button type="button" onclick="setMobileRate(12.5)" class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold">12.5%</button>
+                  <button type="button" onclick="setMobileRate(5)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer active:scale-95">5%</button>
+                  <button type="button" onclick="setMobileRate(7.5)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer active:scale-95">7.5%</button>
+                  <button type="button" onclick="setMobileRate(10)" class="px-2.5 py-1 bg-blue-100 border border-blue-300 rounded-lg text-xs font-bold text-blue-800 cursor-pointer active:scale-95">10%</button>
+                  <button type="button" onclick="setMobileRate(12.5)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer active:scale-95">12.5%</button>
                 </div>
               </div>
               <input type="number" id="mob-rate" step="0.1" inputmode="decimal" value="10.0" oninput="calcMobileCommission()" class="w-full text-base font-bold p-2.5 bg-white border border-slate-300 rounded-xl text-blue-700 font-mono text-center">
@@ -268,10 +268,10 @@
               <div class="flex items-center justify-between">
                 <label class="text-[11px] font-semibold text-slate-700">Vaste Fee per Rit (€)</label>
                 <div class="flex gap-1">
-                  <button type="button" onclick="setMobileFixedFee(100)" class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold">€ 100</button>
-                  <button type="button" onclick="setMobileFixedFee(150)" class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold">€ 150</button>
-                  <button type="button" onclick="setMobileFixedFee(200)" class="px-2 py-0.5 bg-purple-100 border border-purple-300 rounded text-[10px] font-bold text-purple-800">€ 200</button>
-                  <button type="button" onclick="setMobileFixedFee(250)" class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-semibold">€ 250</button>
+                  <button type="button" onclick="setMobileFixedFee(100)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer active:scale-95">€ 100</button>
+                  <button type="button" onclick="setMobileFixedFee(150)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer active:scale-95">€ 150</button>
+                  <button type="button" onclick="setMobileFixedFee(200)" class="px-2.5 py-1 bg-purple-100 border border-purple-300 rounded-lg text-xs font-bold text-purple-800 cursor-pointer active:scale-95">€ 200</button>
+                  <button type="button" onclick="setMobileFixedFee(250)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer active:scale-95">€ 250</button>
                 </div>
               </div>
               <input type="number" id="mob-fixed-fee" step="5" inputmode="decimal" value="200.00" oninput="calcMobileCommission()" class="w-full text-base font-bold p-2.5 bg-white border border-slate-300 rounded-xl text-purple-700 font-mono text-center">
@@ -307,14 +307,14 @@
           </div>
 
           <!-- Submit Buttons: Offerte & Direct Aanmelden -->
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <button type="button" onclick="submitMobileOrderAs('Offerte')" class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-bold py-3.5 px-2 rounded-xl shadow-md text-xs flex items-center justify-center gap-1.5 transition">
-              <i class="fa-solid fa-file-contract text-xs"></i>
-              <span>Als Offerte</span>
+          <div class="grid grid-cols-2 gap-2.5 pt-1">
+            <button type="button" id="mob-btn-submit-offerte" onclick="submitMobileOrderAs('Offerte')" class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.97] text-white font-bold py-3.5 px-2 rounded-xl shadow-md text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+              <i class="fa-solid fa-file-contract text-xs pointer-events-none"></i>
+              <span class="pointer-events-none">Als Offerte</span>
             </button>
-            <button type="button" onclick="submitMobileOrderAs('Aangemeld')" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3.5 px-2 rounded-xl shadow-md text-xs flex items-center justify-center gap-1.5 transition">
-              <i class="fa-solid fa-paper-plane text-xs"></i>
-              <span>Rit Aanmelden</span>
+            <button type="button" id="mob-btn-submit-order" onclick="submitMobileOrderAs('Aangemeld')" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold py-3.5 px-2 rounded-xl shadow-md text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+              <i class="fa-solid fa-paper-plane text-xs pointer-events-none"></i>
+              <span class="pointer-events-none">Rit Aanmelden</span>
             </button>
           </div>
         </form>
@@ -372,22 +372,22 @@
   </main>
 
   <!-- Mobile Bottom Navigation Bar (iPhone 15 Plus Home Bar safe) -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200/70 px-2 pt-2 z-40 safe-bottom shadow-[0_-4px_24px_rgba(0,0,0,0.06)] flex justify-around items-center">
-    <button onclick="switchMobileView('view-dashboard')" id="tab-btn-dashboard" class="mobile-tab-btn active flex flex-col items-center justify-center gap-1 text-slate-400 py-1 transition active:scale-95">
-      <i class="fa-solid fa-chart-pie text-lg"></i>
-      <span class="text-[10px] font-semibold tracking-tight">Dashboard</span>
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 px-2 pt-1.5 z-40 safe-bottom shadow-[0_-4px_24px_rgba(0,0,0,0.06)] flex justify-around items-center">
+    <button type="button" onclick="switchMobileView('view-dashboard')" id="tab-btn-dashboard" class="mobile-tab-btn active flex flex-col items-center justify-center gap-1 text-slate-400 py-1 transition active:scale-95 cursor-pointer">
+      <i class="fa-solid fa-chart-pie text-lg pointer-events-none"></i>
+      <span class="text-[10px] font-semibold tracking-tight pointer-events-none">Dashboard</span>
     </button>
-    <button onclick="switchMobileView('view-new-order')" id="tab-btn-order" class="mobile-tab-btn flex flex-col items-center justify-center gap-1 text-slate-400 py-1 transition active:scale-95">
-      <i class="fa-solid fa-plus-circle text-lg"></i>
-      <span class="text-[10px] font-semibold tracking-tight">Nieuwe Rit</span>
+    <button type="button" onclick="switchMobileView('view-new-order')" id="tab-btn-order" class="mobile-tab-btn flex flex-col items-center justify-center gap-1 text-slate-400 py-1 transition active:scale-95 cursor-pointer">
+      <i class="fa-solid fa-plus-circle text-lg pointer-events-none"></i>
+      <span class="text-[10px] font-semibold tracking-tight pointer-events-none">Nieuwe Rit</span>
     </button>
-    <button onclick="switchMobileView('view-orders-list')" id="tab-btn-list" class="mobile-tab-btn flex flex-col items-center justify-center gap-1 text-slate-400 py-1 transition active:scale-95">
-      <i class="fa-solid fa-clipboard-list text-lg"></i>
-      <span class="text-[10px] font-semibold tracking-tight">Ritten</span>
+    <button type="button" onclick="switchMobileView('view-orders-list')" id="tab-btn-list" class="mobile-tab-btn flex flex-col items-center justify-center gap-1 text-slate-400 py-1 transition active:scale-95 cursor-pointer">
+      <i class="fa-solid fa-clipboard-list text-lg pointer-events-none"></i>
+      <span class="text-[10px] font-semibold tracking-tight pointer-events-none">Ritten</span>
     </button>
-    <button onclick="switchMobileView('view-new-client')" id="tab-btn-client" class="mobile-tab-btn flex flex-col items-center justify-center gap-1 text-slate-400 py-1 transition active:scale-95">
-      <i class="fa-solid fa-building-user text-lg"></i>
-      <span class="text-[10px] font-semibold tracking-tight">+ Verlader</span>
+    <button type="button" onclick="switchMobileView('view-new-client')" id="tab-btn-client" class="mobile-tab-btn flex flex-col items-center justify-center gap-1 text-slate-400 py-1 transition active:scale-95 cursor-pointer">
+      <i class="fa-solid fa-building-user text-lg pointer-events-none"></i>
+      <span class="text-[10px] font-semibold tracking-tight pointer-events-none">+ Verlader</span>
     </button>
   </nav>
 
@@ -400,7 +400,7 @@
   </div>
 
   <!-- Mobile Offerte Viewer Modal -->
-  <div id="modal-mob-quote" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div id="modal-mob-quote" onclick="if(event.target === this) closeMobileQuoteModal()" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
       <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2.5">
@@ -412,8 +412,8 @@
             <p class="text-[10px] text-slate-400" id="mob-quote-subtitle">Prijsopgave voor verlader</p>
           </div>
         </div>
-        <button onclick="closeMobileQuoteModal()" class="text-slate-400 hover:text-white p-1 text-base">
-          <i class="fa-solid fa-xmark"></i>
+        <button type="button" onclick="closeMobileQuoteModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center text-sm cursor-pointer transition">
+          <i class="fa-solid fa-xmark pointer-events-none"></i>
         </button>
       </div>
 
@@ -469,15 +469,19 @@
 
         <!-- Actieknoppen -->
         <div class="space-y-2 pt-2">
-          <button id="mob-btn-email-quote" onclick="sendMobileQuoteToMyEmail()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 transition">
+          <a id="mob-btn-download-pdf" href="#" download class="w-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 transition cursor-pointer">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span>Download Offerte A4 PDF</span>
+          </a>
+          <button id="mob-btn-email-quote" onclick="sendMobileQuoteToMyEmail()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 transition cursor-pointer">
             <i class="fa-solid fa-paper-plane"></i>
             <span>Direct naar mijn e-mail (admeijs@gmail.com)</span>
           </button>
-          <button id="mob-btn-accept-quote" onclick="acceptMobileQuote()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 transition">
+          <button id="mob-btn-accept-quote" onclick="acceptMobileQuote()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 transition cursor-pointer">
             <i class="fa-solid fa-check"></i>
             <span>Offerte Accepteren &amp; Rit Aanmelden</span>
           </button>
-          <button onclick="shareMobileQuote()" class="w-full bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow text-xs flex items-center justify-center gap-2 transition">
+          <button onclick="shareMobileQuote()" class="w-full bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow text-xs flex items-center justify-center gap-2 transition cursor-pointer">
             <i class="fa-solid fa-share-nodes"></i>
             <span>Offerte Delen / Versturen</span>
           </button>
@@ -486,6 +490,6 @@
     </div>
   </div>
 
-  <script src="mobile.js?v=20261022_iphone15_plus"></script>
+  <script src="mobile.js?v=20261022_buttons_fix"></script>
 </body>
 </html>
