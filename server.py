@@ -20,6 +20,43 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 
+def safe_float(val, default=0.0):
+    if val is None or val == "":
+        return default
+    if isinstance(val, (int, float)):
+        return float(val)
+    s = str(val).strip().replace("€", "").replace("EUR", "").replace("$", "").replace(" ", "")
+    if not s:
+        return default
+    # Handle thousands and decimal separators
+    if "," in s and "." in s:
+        if s.find(".") < s.find(","):
+            # Format: 1.234,56 (European)
+            s = s.replace(".", "").replace(",", ".")
+        else:
+            # Format: 1,234.56 (US/UK)
+            s = s.replace(",", "")
+    elif "," in s:
+        # Format: 2500,50
+        s = s.replace(",", ".")
+    try:
+        return float(s)
+    except Exception:
+        return default
+
+
+def safe_int(val, default=0):
+    if val is None or val == "":
+        return default
+    try:
+        if isinstance(val, int):
+            return val
+        s = str(val).split(".")[0].split(",")[0].strip()
+        return int(s)
+    except Exception:
+        return default
+
+
 class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=STATIC_DIR, **kwargs)
@@ -499,34 +536,64 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
         elif path == "/api/orders":
             cur = conn.cursor()
             order_num = body.get("order_number")
-            if not order_num:
-                count = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0] + 1
-                order_num = f"BEM-2026-{count:03d}"
+            if not order_num or not str(order_num).strip():
+                # Vind het hoogste bestaande BEM-2026 volgnummer om duplicaten gegarandeerd te voorkomen
+                rows = conn.execute("SELECT order_number FROM orders WHERE order_number LIKE 'BEM-2026-%'").fetchall()
+                max_num = 0
+                for r in rows:
+                    try:
+                        num_part = int(r[0].split("-")[-1])
+                        if num_part > max_num:
+                            max_num = num_part
+                    except Exception:
+                        pass
+                order_num = f"BEM-2026-{max_num + 1:03d}"
 
-            freight_price = float(body.get("freight_price", 0))
-            carrier_price = float(body.get("carrier_price", 0))
-            comm_type = body.get("commission_type", "percentage") # 'percentage', 'fixed', 'margin', 'custom'
-            comm_rate = float(body.get("commission_rate", 10.0))
-            
+            freight_price = safe_float(body.get("freight_price"), 0.0)
+            carrier_price = safe_float(body.get("carrier_price"), 0.0)
+            comm_type = body.get("commission_type") or "percentage"
+            comm_rate = safe_float(body.get("commission_rate"), 10.0)
+            weight_kg = safe_float(body.get("weight_kg"), 0.0)
+            palettes = safe_int(body.get("palettes"), 0)
+            loading_meters = safe_float(body.get("loading_meters"), 0.0)
+
             # Automatische commissieberekening conform gekozen flexibel model
-            if "commission_amount" in body and float(body.get("commission_amount", 0)) > 0:
-                commission_amount = round(float(body.get("commission_amount")), 2)
+            if "commission_amount" in body and safe_float(body.get("commission_amount")) > 0:
+                commission_amount = round(safe_float(body.get("commission_amount")), 2)
             else:
                 if comm_type == "percentage":
                     commission_amount = round(freight_price * (comm_rate / 100.0), 2)
                 elif comm_type == "fixed":
-                    commission_amount = round(float(body.get("commission_fixed", 200.0)), 2)
+                    commission_amount = round(safe_float(body.get("commission_fixed"), 200.0), 2)
                 elif comm_type == "margin":
                     commission_amount = round(max(0.0, freight_price - carrier_price), 2)
                 else:
-                    commission_amount = round(float(body.get("commission_amount", 0.0)), 2)
+                    commission_amount = round(safe_float(body.get("commission_amount"), 0.0), 2)
 
             if freight_price > 0 and (comm_rate == 0 or comm_type != "percentage") and commission_amount > 0:
                 comm_rate = round((commission_amount / freight_price) * 100.0, 1)
 
-            origin_c = body.get("origin_country", "IT").upper()
-            dest_c = body.get("destination_country", "IT").upper()
+            origin_c = (body.get("origin_country") or "NL").upper()
+            dest_c = (body.get("destination_country") or "IT").upper()
             t_type = "domestic" if (origin_c == "IT" and dest_c == "IT") else "international"
+
+            origin_city = (body.get("origin_city") or "").strip()
+            dest_city = (body.get("destination_city") or "").strip()
+            goods = (body.get("goods_description") or "").strip() or "Diverse handelsgoederen"
+
+            client_id = body.get("client_id")
+            if client_id is not None and str(client_id).strip() != "":
+                try:
+                    client_id = int(client_id)
+                except Exception:
+                    client_id = None
+            else:
+                client_id = None
+
+            if not origin_city:
+                origin_city = "Onbekend"
+            if not dest_city:
+                dest_city = "Onbekend"
 
             cur.execute("""
             INSERT INTO orders (order_number, client_id, origin_country, origin_city, origin_address,
@@ -535,12 +602,12 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
                                 commission_type, commission_rate, commission_amount, status, transport_type, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                order_num, body.get("client_id"), origin_c, body.get("origin_city"),
-                body.get("origin_address"), dest_c, body.get("destination_city"), body.get("destination_address"),
-                body.get("goods_description"), float(body.get("weight_kg", 0)), int(body.get("palettes", 0)),
-                float(body.get("loading_meters", 0)), body.get("cmr_number"), body.get("pickup_date"),
-                body.get("delivery_date"), freight_price, carrier_price, comm_type, comm_rate, commission_amount,
-                body.get("status", "Aangemeld"), t_type, body.get("notes")
+                order_num, client_id, origin_c, origin_city,
+                body.get("origin_address") or "", dest_c, dest_city, body.get("destination_address") or "",
+                goods, weight_kg, palettes,
+                loading_meters, body.get("cmr_number") or "", body.get("pickup_date") or datetime.now().strftime("%Y-%m-%d"),
+                body.get("delivery_date") or "", freight_price, carrier_price, comm_type, comm_rate, commission_amount,
+                body.get("status") or "Aangemeld", t_type, body.get("notes") or ""
             ))
             conn.commit()
             new_id = cur.lastrowid
@@ -904,16 +971,16 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
 
         if path.startswith("/api/orders/"):
             order_id = int(path.split("/")[3])
-            freight_price = float(body.get("freight_price", 0))
-            carrier_price = float(body.get("carrier_price", 0))
-            comm_type = body.get("commission_type", "percentage")
-            comm_rate = float(body.get("commission_rate", 10.0))
-            comm_amount = float(body.get("commission_amount", 0))
+            freight_price = safe_float(body.get("freight_price"), 0.0)
+            carrier_price = safe_float(body.get("carrier_price"), 0.0)
+            comm_type = body.get("commission_type") or "percentage"
+            comm_rate = safe_float(body.get("commission_rate"), 10.0)
+            comm_amount = safe_float(body.get("commission_amount"), 0.0)
             if comm_amount == 0 and freight_price > 0:
                 if comm_type == "percentage":
                     comm_amount = round(freight_price * (comm_rate / 100.0), 2)
                 elif comm_type == "fixed":
-                    comm_amount = round(float(body.get("commission_fixed", 200.0)), 2)
+                    comm_amount = round(safe_float(body.get("commission_fixed"), 200.0), 2)
                 elif comm_type == "margin":
                     comm_amount = round(max(0.0, freight_price - carrier_price), 2)
 

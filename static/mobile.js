@@ -16,25 +16,15 @@ async function authFetch(url, options = {}) {
   if (authToken) {
     options.headers["Authorization"] = `Bearer ${authToken}`;
   }
-  const res = await fetch(url, options);
-  if (res.status === 401) {
-    authToken = "";
-    localStorage.removeItem("transito_auth_token");
-    showMobileLockscreen();
-    throw new Error("Pincode vereist of sessie verlopen");
-  }
-  return res;
+  return await fetch(url, options);
 }
 
 function showMobileLockscreen() {
-  const ls = document.getElementById("mob-lockscreen");
-  if (ls) ls.classList.remove("hidden");
-  clearPin();
+  // Vergrendeling uitgeschakeld op mobiel
 }
 
 function hideMobileLockscreen() {
-  const ls = document.getElementById("mob-lockscreen");
-  if (ls) ls.classList.add("hidden");
+  // Vergrendeling uitgeschakeld op mobiel
 }
 
 function updatePinDots() {
@@ -122,28 +112,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Valideer token met de server
-  if (!authToken) {
-    showMobileLockscreen();
-  } else {
-    try {
-      const res = await fetch("/api/auth/status", {
-        headers: { "Authorization": `Bearer ${authToken}` }
-      });
-      const data = await res.json();
-      if (!data.authenticated) {
-        authToken = "";
-        localStorage.removeItem("transito_auth_token");
-        showMobileLockscreen();
-        return;
-      }
-      refreshMobileData();
-    } catch (e) {
-      // Netwerkfout of server ontwaakt
-      showMobileToast("Server ontwaakt...", "info");
-      refreshMobileData();
-    }
-  }
+  // Direct mobiele data laden zonder pincode
+  refreshMobileData();
 });
 
 async function refreshMobileData() {
@@ -151,13 +121,74 @@ async function refreshMobileData() {
   if (icon) icon.classList.add("fa-spin");
 
   try {
-    await Promise.all([loadCompanyInfo(), loadMobileClients(), loadMobileOrders()]);
+    await Promise.all([loadCompanyInfo(), loadMobileClients(), loadMobileOrders(), loadMobileStats()]);
     showMobileToast("Gesynchroniseerd met kantoor", "success");
   } catch (err) {
     showMobileToast("Fout: " + err, "error");
   } finally {
     if (icon) setTimeout(() => icon.classList.remove("fa-spin"), 500);
   }
+}
+
+async function loadMobileStats() {
+  try {
+    const res = await authFetch("/api/stats");
+    const stats = await res.json();
+    
+    const commEl = document.getElementById("mob-stat-commission");
+    if (commEl) commEl.textContent = `€ ${(stats.total_earned_commissions || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const sumEl = document.getElementById("mob-stat-orders-summary");
+    if (sumEl) sumEl.innerHTML = `<i class="fa-solid fa-truck mr-1"></i> ${stats.total_orders || 0} bemiddelde ritten`;
+
+    const unbilledEl = document.getElementById("mob-stat-unbilled");
+    if (unbilledEl) unbilledEl.textContent = `€ ${(stats.unbilled_commissions || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} openstaand`;
+
+    const activeEl = document.getElementById("mob-stat-active-orders");
+    if (activeEl) activeEl.textContent = stats.active_orders || 0;
+
+    const invEl = document.getElementById("mob-stat-invoices");
+    if (invEl) invEl.textContent = stats.total_commission_invoices || 0;
+
+    const profitEl = document.getElementById("mob-stat-net-profit");
+    if (profitEl) profitEl.textContent = `€ ${Math.round(stats.net_profit || 0).toLocaleString("nl-NL")}`;
+
+    renderMobileRecentOrders();
+  } catch (e) {
+    console.error("Fout bij ophalen mobiele KPI stats:", e);
+  }
+}
+
+function renderMobileRecentOrders() {
+  const container = document.getElementById("mob-recent-orders-list");
+  if (!container) return;
+
+  const recents = (mobileOrders || []).slice(0, 3);
+  if (recents.length === 0) {
+    container.innerHTML = `<div class="text-xs text-slate-400 py-3 text-center">Nog geen opdrachten ingevoerd</div>`;
+    return;
+  }
+
+  container.innerHTML = recents.map(o => {
+    let statusBadge = "";
+    if (o.status === "Aangemeld") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">Aangemeld</span>`;
+    else if (o.status === "Onderweg") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">Onderweg</span>`;
+    else if (o.status === "Geleverd") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700">Geleverd</span>`;
+    else if (o.status === "Gefactureerd") statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">Gefactureerd</span>`;
+
+    return `
+      <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs">
+        <div class="truncate max-w-[180px]">
+          <span class="font-bold text-slate-900 block truncate">${o.client_name || 'Verlader'}</span>
+          <span class="text-[11px] text-slate-500">${o.origin_city || '?'} &rarr; ${o.destination_city || '?'}</span>
+        </div>
+        <div class="text-right shrink-0">
+          <span class="font-bold text-emerald-700 block text-xs">+€ ${(o.commission_amount || 0).toFixed(2)}</span>
+          ${statusBadge}
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 async function loadCompanyInfo() {
@@ -184,14 +215,23 @@ async function loadCompanyInfo() {
 }
 
 async function loadMobileClients() {
-  const res = await authFetch("/api/parties");
-  mobileClients = await res.json();
+  try {
+    const res = await authFetch("/api/parties");
+    const data = await res.json();
+    mobileClients = Array.isArray(data) ? data : [];
 
-  const clientSelect = document.getElementById("mob-client");
-  if (clientSelect) {
-    clientSelect.innerHTML = mobileClients.map(c => 
-      `<option value="${c.id}">${escapeHtml(c.name)} (${c.country})</option>`
-    ).join("");
+    const clientSelect = document.getElementById("mob-client");
+    if (clientSelect) {
+      if (mobileClients.length === 0) {
+        clientSelect.innerHTML = `<option value="">-- Geen verladers beschikbaar (maak eerst aan) --</option>`;
+      } else {
+        clientSelect.innerHTML = mobileClients.map(c => 
+          `<option value="${c.id}">${escapeHtml(c.name)} (${c.country})</option>`
+        ).join("");
+      }
+    }
+  } catch (err) {
+    console.error("Fout bij ophalen verladers:", err);
   }
 }
 
@@ -369,11 +409,14 @@ async function submitMobileOrder(e) {
   const commAmount = parseFloat(document.getElementById("mob-comm-amount").value) || 0;
   const carrierPrice = parseFloat(document.getElementById("mob-carrier-price").value) || 0;
 
+  const clientVal = document.getElementById("mob-client") ? document.getElementById("mob-client").value : "";
+  const clientId = clientVal && !isNaN(parseInt(clientVal, 10)) ? parseInt(clientVal, 10) : null;
+
   const payload = {
-    client_id: parseInt(document.getElementById("mob-client").value),
-    origin_country: document.getElementById("mob-orig-country").value.toUpperCase(),
+    client_id: clientId,
+    origin_country: (document.getElementById("mob-orig-country").value || "NL").toUpperCase(),
     origin_city: document.getElementById("mob-orig-city").value,
-    destination_country: document.getElementById("mob-dest-country").value.toUpperCase(),
+    destination_country: (document.getElementById("mob-dest-country").value || "IT").toUpperCase(),
     destination_city: document.getElementById("mob-dest-city").value,
     goods_description: document.getElementById("mob-goods").value,
     weight_kg: parseFloat(document.getElementById("mob-weight").value) || 0,
@@ -383,7 +426,7 @@ async function submitMobileOrder(e) {
     commission_type: commType,
     commission_rate: commRate,
     commission_amount: commAmount,
-    pickup_date: document.getElementById("mob-pickup-date").value,
+    pickup_date: document.getElementById("mob-pickup-date").value || new Date().toISOString().split("T")[0],
     status: "Aangemeld"
   };
 
@@ -449,7 +492,7 @@ async function submitMobileClient(e) {
 }
 
 function switchMobileView(viewId) {
-  ["view-new-order", "view-orders-list", "view-new-client"].forEach(v => {
+  ["view-dashboard", "view-new-order", "view-orders-list", "view-new-client"].forEach(v => {
     const el = document.getElementById(v);
     if (el) el.classList.add("hidden");
   });
@@ -457,13 +500,16 @@ function switchMobileView(viewId) {
   const target = document.getElementById(viewId);
   if (target) target.classList.remove("hidden");
 
-  document.getElementById("tab-btn-order").classList.remove("active");
-  document.getElementById("tab-btn-list").classList.remove("active");
-  document.getElementById("tab-btn-client").classList.remove("active");
+  const tabButtons = ["tab-btn-dashboard", "tab-btn-order", "tab-btn-list", "tab-btn-client"];
+  tabButtons.forEach(btnId => {
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.remove("active");
+  });
 
-  if (viewId === "view-new-order") document.getElementById("tab-btn-order").classList.add("active");
-  if (viewId === "view-orders-list") document.getElementById("tab-btn-list").classList.add("active");
-  if (viewId === "view-new-client") document.getElementById("tab-btn-client").classList.add("active");
+  if (viewId === "view-dashboard" && document.getElementById("tab-btn-dashboard")) document.getElementById("tab-btn-dashboard").classList.add("active");
+  if (viewId === "view-new-order" && document.getElementById("tab-btn-order")) document.getElementById("tab-btn-order").classList.add("active");
+  if (viewId === "view-orders-list" && document.getElementById("tab-btn-list")) document.getElementById("tab-btn-list").classList.add("active");
+  if (viewId === "view-new-client" && document.getElementById("tab-btn-client")) document.getElementById("tab-btn-client").classList.add("active");
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }

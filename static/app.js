@@ -28,31 +28,9 @@ window.fetch = async function(url, options = {}) {
   return response;
 };
 
-function showDesktopLockscreen() {
-  const modal = document.getElementById("modal-desktop-lockscreen");
-  if (modal) {
-    modal.classList.remove("hidden");
-    const input = document.getElementById("desktop-pin-input");
-    if (input) {
-      input.value = "";
-      setTimeout(() => input.focus(), 100);
-    }
-    const errEl = document.getElementById("desktop-pin-error");
-    if (errEl) errEl.textContent = "";
-  }
-}
-
-function hideDesktopLockscreen() {
-  const modal = document.getElementById("modal-desktop-lockscreen");
-  if (modal) modal.classList.add("hidden");
-}
-
-function lockApp() {
-  authToken = "";
-  localStorage.removeItem("transito_auth_token");
-  showDesktopLockscreen();
-  showToast("Dashboard vergrendeld", "info");
-}
+function showDesktopLockscreen() {}
+function hideDesktopLockscreen() {}
+function lockApp() {}
 
 async function submitDesktopPin(e) {
   e.preventDefault();
@@ -1231,6 +1209,8 @@ async function saveNewOrder(e) {
       await loadOrders();
       await loadStats();
       switchTab("orders");
+    } else {
+      showToast("Fout bij opslaan: " + (result.error || result.message || "Onbekende fout"), "error");
     }
   } catch (err) {
     showToast("Fout bij opslaan opdracht: " + err, "error");
