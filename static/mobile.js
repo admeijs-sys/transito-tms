@@ -166,6 +166,9 @@ async function loadMobileStats() {
     const activeEl = document.getElementById("mob-stat-active-orders");
     if (activeEl) activeEl.textContent = stats.active_orders || 0;
 
+    const totalOrdersEl = document.getElementById("mob-stat-total-orders");
+    if (totalOrdersEl) totalOrdersEl.textContent = stats.total_orders || 0;
+
     const invEl = document.getElementById("mob-stat-invoices");
     if (invEl) invEl.textContent = stats.total_commission_invoices || 0;
 
@@ -202,7 +205,7 @@ function renderMobileRecentOrders() {
           <span class="text-[11px] text-slate-500">${o.origin_city || '?'} &rarr; ${o.destination_city || '?'}</span>
         </div>
         <div class="text-right shrink-0">
-          <span class="font-bold text-emerald-700 block text-xs">+€ ${(o.commission_amount || 0).toFixed(2)}</span>
+          <span class="font-bold text-slate-800 block text-xs">€ ${(o.freight_price || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           ${statusBadge}
         </div>
       </div>
@@ -294,11 +297,8 @@ async function loadMobileOrders() {
           <span class="font-bold text-emerald-600">${o.destination_country}</span> ${escapeHtml(o.destination_city)}
         </div>
         <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
-          <span class="text-slate-500 text-[11px]">Vracht: € ${o.freight_price.toFixed(2)}</span>
-          <div class="text-right">
-            <span class="font-bold text-emerald-600 text-xs">+ € ${o.commission_amount.toFixed(2)}</span>
-            <span class="text-[10px] font-semibold text-slate-500 block">${commTag}</span>
-          </div>
+          <span class="text-slate-500 text-[11px]">Vrachtprijs</span>
+          <span class="font-bold text-slate-900 text-xs">€ ${(o.freight_price || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div class="flex items-center justify-between pt-1.5 border-t border-slate-100">
           <div class="flex items-center gap-1.5">

@@ -102,23 +102,19 @@
 
     <!-- ================= VIEW 0: MOBIEL DASHBOARD ================= -->
     <section id="view-dashboard" class="space-y-4">
-      <!-- Provisie Omzet Card -->
-      <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-5 text-white shadow-xl shadow-blue-600/25 relative overflow-hidden">
-        <div class="absolute -right-3 -bottom-3 text-white/10 text-8xl pointer-events-none">
-          <i class="fa-solid fa-wallet"></i>
-        </div>
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider text-blue-200">Verdiende Provisie</span>
-          <span class="text-[10px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-md">Netto Omzet</span>
-        </div>
-        <h2 id="mob-stat-commission" class="text-3xl font-black tracking-tight">€ 0,00</h2>
-        <div class="mt-3 pt-3 border-t border-white/15 flex items-center justify-between text-xs text-blue-100">
-          <span id="mob-stat-orders-summary"><i class="fa-solid fa-truck mr-1"></i> 0 ritten</span>
-          <span id="mob-stat-unbilled" class="font-bold text-amber-200">€ 0,00 openstaand</span>
-        </div>
+      <!-- Snelle Acties Knoppen -->
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="switchMobileView('view-new-order')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold p-3.5 rounded-2xl shadow-sm text-xs flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-plus-circle text-sm"></i>
+          <span>Nieuwe Rit</span>
+        </button>
+        <button onclick="switchMobileView('view-orders-list')" class="bg-white hover:bg-slate-50 active:scale-95 text-slate-700 border border-slate-300 font-bold p-3.5 rounded-2xl shadow-sm text-xs flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-list-check text-blue-600 text-sm"></i>
+          <span>Alle Ritten</span>
+        </button>
       </div>
 
-      <!-- 3 Compacte KPI Tegels -->
+      <!-- 3 Compacte Operationele KPI Tegels -->
       <div class="grid grid-cols-3 gap-2 sm:gap-3">
         <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center">
           <i class="fa-solid fa-truck-fast text-blue-600 text-base sm:text-lg mb-1"></i>
@@ -126,27 +122,15 @@
           <span id="mob-stat-active-orders" class="text-xs sm:text-sm font-bold text-slate-800">0</span>
         </div>
         <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center">
+          <i class="fa-solid fa-boxes-stacked text-indigo-600 text-base sm:text-lg mb-1"></i>
+          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold block truncate">Totaal Ritten</span>
+          <span id="mob-stat-total-orders" class="text-xs sm:text-sm font-bold text-slate-800">0</span>
+        </div>
+        <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center">
           <i class="fa-solid fa-file-invoice-dollar text-emerald-600 text-base sm:text-lg mb-1"></i>
           <span class="text-[10px] sm:text-xs text-slate-500 font-semibold block truncate">SDI Facturen</span>
           <span id="mob-stat-invoices" class="text-xs sm:text-sm font-bold text-emerald-700">0</span>
         </div>
-        <div class="bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm text-center">
-          <i class="fa-solid fa-chart-line text-purple-600 text-base sm:text-lg mb-1"></i>
-          <span class="text-[10px] sm:text-xs text-slate-500 font-semibold block truncate">Nettowinst</span>
-          <span id="mob-stat-net-profit" class="text-xs sm:text-sm font-bold text-purple-700">€ 0</span>
-        </div>
-      </div>
-
-      <!-- Snelle Acties Knoppen -->
-      <div class="grid grid-cols-2 gap-2.5">
-        <button onclick="switchMobileView('view-new-order')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold p-3 rounded-xl shadow-sm text-xs flex items-center justify-center gap-2 transition">
-          <i class="fa-solid fa-plus-circle"></i>
-          <span>Nieuwe Rit</span>
-        </button>
-        <button onclick="switchMobileView('view-orders-list')" class="bg-white hover:bg-slate-50 active:scale-95 text-slate-700 border border-slate-300 font-bold p-3 rounded-xl shadow-sm text-xs flex items-center justify-center gap-2 transition">
-          <i class="fa-solid fa-list-check text-blue-600"></i>
-          <span>Alle Ritten</span>
-        </button>
       </div>
 
       <!-- Recente Bemiddelingen Mini-lijst -->
