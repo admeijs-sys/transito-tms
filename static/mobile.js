@@ -18,8 +18,10 @@ async function authFetch(url, options = {}) {
   }
   const res = await fetch(url, options);
   if (res.status === 401) {
+    authToken = "";
+    localStorage.removeItem("transito_auth_token");
     showMobileLockscreen();
-    throw new Error("Pincode vereist");
+    throw new Error("Pincode vereist of sessie verlopen");
   }
   return res;
 }
@@ -101,16 +103,46 @@ async function submitMobilePin() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const today = new Date().toISOString().split("T")[0];
   const dateInput = document.getElementById("mob-pickup-date");
   if (dateInput) dateInput.value = today;
 
-  // Controleer eerst of er al een sessietoken is
+  // Luister naar toetsenbord / hardware invoer voor pincode
+  window.addEventListener("keydown", (e) => {
+    const ls = document.getElementById("mob-lockscreen");
+    if (ls && !ls.classList.contains("hidden")) {
+      if (e.key >= "0" && e.key <= "9") {
+        pressPinDigit(e.key);
+      } else if (e.key === "Backspace" || e.key === "Delete") {
+        clearPin();
+      } else if (e.key === "Enter") {
+        submitMobilePin();
+      }
+    }
+  });
+
+  // Valideer token met de server
   if (!authToken) {
     showMobileLockscreen();
   } else {
-    refreshMobileData();
+    try {
+      const res = await fetch("/api/auth/status", {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      const data = await res.json();
+      if (!data.authenticated) {
+        authToken = "";
+        localStorage.removeItem("transito_auth_token");
+        showMobileLockscreen();
+        return;
+      }
+      refreshMobileData();
+    } catch (e) {
+      // Netwerkfout of server ontwaakt
+      showMobileToast("Server ontwaakt...", "info");
+      refreshMobileData();
+    }
   }
 });
 

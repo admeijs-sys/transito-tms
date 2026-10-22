@@ -298,19 +298,19 @@
   </div>
 
   <!-- ================= MOBILE PIN LOCKSCREEN ================= -->
-  <div id="mob-lockscreen" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-white hidden select-none">
-    <div class="max-w-xs w-full text-center space-y-6">
+  <div id="mob-lockscreen" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 overflow-y-auto p-4 flex flex-col items-center justify-center text-white hidden select-none min-h-screen">
+    <div class="max-w-xs w-full text-center space-y-5 my-auto py-6">
       
       <div class="flex flex-col items-center gap-2">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white text-2xl">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white text-xl">
           <i class="fa-solid fa-shield-halved"></i>
         </div>
         <h2 class="text-xl font-extrabold tracking-tight">Transito Beveiligd</h2>
-        <p class="text-xs text-slate-400">Voer je pincode in om toegang te krijgen</p>
+        <p class="text-xs text-slate-400">Voer je 4-cijferige pincode in</p>
       </div>
 
       <!-- PIN Code Display Dots -->
-      <div class="flex justify-center items-center gap-3 py-2">
+      <div class="flex justify-center items-center gap-3 py-1">
         <div id="pin-dot-1" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-transparent transition-all"></div>
         <div id="pin-dot-2" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-transparent transition-all"></div>
         <div id="pin-dot-3" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-transparent transition-all"></div>
@@ -321,27 +321,27 @@
       <div id="mob-pin-error" class="text-xs font-semibold text-rose-400 min-h-[18px]"></div>
 
       <!-- Keypad -->
-      <div class="grid grid-cols-3 gap-3.5 max-w-[260px] mx-auto text-xl font-bold">
-        <button type="button" onclick="pressPinDigit('1')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">1</button>
-        <button type="button" onclick="pressPinDigit('2')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">2</button>
-        <button type="button" onclick="pressPinDigit('3')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">3</button>
-        <button type="button" onclick="pressPinDigit('4')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">4</button>
-        <button type="button" onclick="pressPinDigit('5')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">5</button>
-        <button type="button" onclick="pressPinDigit('6')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">6</button>
-        <button type="button" onclick="pressPinDigit('7')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">7</button>
-        <button type="button" onclick="pressPinDigit('8')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">8</button>
-        <button type="button" onclick="pressPinDigit('9')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">9</button>
-        <button type="button" onclick="clearPin()" class="h-14 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 active:scale-95 transition flex items-center justify-center text-sm font-semibold">
+      <div class="grid grid-cols-3 gap-2.5 max-w-[260px] mx-auto text-xl font-bold">
+        <button type="button" onclick="pressPinDigit('1')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">1</button>
+        <button type="button" onclick="pressPinDigit('2')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">2</button>
+        <button type="button" onclick="pressPinDigit('3')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">3</button>
+        <button type="button" onclick="pressPinDigit('4')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">4</button>
+        <button type="button" onclick="pressPinDigit('5')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">5</button>
+        <button type="button" onclick="pressPinDigit('6')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">6</button>
+        <button type="button" onclick="pressPinDigit('7')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">7</button>
+        <button type="button" onclick="pressPinDigit('8')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">8</button>
+        <button type="button" onclick="pressPinDigit('9')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">9</button>
+        <button type="button" onclick="clearPin()" class="h-13 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 active:scale-95 transition flex items-center justify-center text-sm font-semibold">
           <i class="fa-solid fa-delete-left text-lg"></i>
         </button>
-        <button type="button" onclick="pressPinDigit('0')" class="h-14 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">0</button>
-        <button type="button" onclick="submitMobilePin()" id="mob-btn-pin-ok" class="h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white transition flex items-center justify-center text-sm font-bold shadow-lg shadow-emerald-600/30">
+        <button type="button" onclick="pressPinDigit('0')" class="h-13 py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 active:scale-95 transition flex items-center justify-center">0</button>
+        <button type="button" onclick="submitMobilePin()" id="mob-btn-pin-ok" class="h-13 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white transition flex items-center justify-center text-sm font-bold shadow-lg shadow-emerald-600/30">
           <i class="fa-solid fa-arrow-right text-lg"></i>
         </button>
       </div>
 
-      <div class="text-[11px] text-slate-500 pt-2">
-        Standaard pincode: <span class="font-mono text-slate-400">2026</span>
+      <div class="text-[11px] text-slate-500 pt-1">
+        Standaard pincode: <span class="font-mono text-slate-300 font-bold">2026</span>
       </div>
     </div>
   </div>
