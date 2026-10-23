@@ -113,6 +113,11 @@
           </span>
         </div>
         <div class="flex items-center gap-2 md:gap-3">
+          <button onclick="openVideoPresenterModal()" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-semibold px-3 md:px-4 py-2 rounded-lg transition-colors shadow-sm shadow-indigo-500/20" title="Persoonlijke Videoboodschap Ad van der Meijs">
+            <i class="fa-solid fa-circle-play text-amber-300 text-xs"></i>
+            <span class="hidden sm:inline">Videoboodschap Ad</span>
+            <span class="sm:hidden font-bold">Video</span>
+          </button>
           <button onclick="openMobileAppModal()" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 md:px-4 py-2 rounded-lg transition-colors shadow-sm shadow-emerald-500/20" title="Mobiele Smartphone App & QR-Code">
             <i class="fa-solid fa-mobile-screen-button text-xs"></i>
             <span class="hidden sm:inline">Mobiele App</span>
@@ -2126,6 +2131,42 @@
 
 
 
+
+  <!-- ================= MODAL: PERSOONLIJKE VIDEOBOODSCHAP (HEYGEN) ================= -->
+  <div id="modal-video-presenter" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-6" onclick="if(event.target === this) closeModal('modal-video-presenter')">
+    <div class="bg-slate-900 border border-slate-700 text-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-circle-play"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-white">Persoonlijke Videoboodschap Ad van der Meijs</h3>
+            <p class="text-xs text-slate-400">Offerte-uitleg voor verladers &amp; transportpartners (12 seconden)</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-video-presenter')" class="text-slate-400 hover:text-white p-1 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-6 bg-slate-950 flex flex-col items-center">
+        <div class="w-full aspect-video rounded-xl overflow-hidden shadow-2xl border border-slate-800 bg-black">
+          <iframe id="video-presenter-iframe" src="https://app.heygen.com/embeds/948dcc55193f4edf81214188e7bed41e" class="w-full h-full" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+        </div>
+
+        <div class="w-full mt-4 p-3 bg-slate-900/90 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 text-slate-300">
+            <i class="fa-solid fa-check-circle text-emerald-400"></i>
+            <span>Gekoppeld aan automatische offerte-e-mails naar verladers</span>
+          </div>
+          <a href="https://app.heygen.com/videos/uw-vrachtofferte-van-transito-staat-klaar-948dcc55193f4edf81214188e7bed41e" target="_blank" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Openen op HeyGen
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Notificatie Container -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2"></div>

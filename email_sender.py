@@ -365,6 +365,15 @@ def generate_quote_email_template(order: dict, company: dict) -> tuple:
                     </ul>
                 </div>
 
+                <!-- Persoonlijke Videoboodschap Ad van der Meijs -->
+                <div style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); border-radius: 12px; padding: 18px 20px; margin: 20px 0; color: #ffffff; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #93c5fd; font-weight: 700; margin-bottom: 6px;">Persoonlijke Videoboodschap</div>
+                    <div style="font-size: 15px; font-weight: 800; margin-bottom: 12px;">Bekijk de toelichting van uw contactpersoon Ad van der Meijs</div>
+                    <a href="https://app.heygen.com/videos/uw-vrachtofferte-van-transito-staat-klaar-948dcc55193f4edf81214188e7bed41e" target="_blank" style="display: inline-block; background-color: #f59e0b; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 13px; padding: 10px 22px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        ▶️ Bekijk Videoboodschap (12 sec)
+                    </a>
+                </div>
+
                 <!-- Bijlage notice -->
                 <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 12px 16px; margin: 20px 0; border-radius: 4px; font-size: 12px; color: #1e3a8a;">
                     <strong>PDF Bijlage:</strong><br>
@@ -397,6 +406,9 @@ Condities:
 - Vervoer geschiedt conform CMR-verdrag
 - Inclusief diesel- en tolgelden
 - Betalingstermijn: 30 dagen na ontvangst CMR
+
+Persoonlijke videotoelichting van Ad van der Meijs bekijken (12 sec):
+https://app.heygen.com/videos/uw-vrachtofferte-van-transito-staat-klaar-948dcc55193f4edf81214188e7bed41e
 
 In de bijlage treft u het officiele A4 PDF-document van deze offerte aan.
     """

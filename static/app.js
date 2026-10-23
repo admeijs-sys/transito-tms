@@ -2211,3 +2211,13 @@ function showToast(msg, type = "info") {
     setTimeout(() => el.remove(), 300);
   }, 4000);
 }
+
+function openVideoPresenterModal() {
+  const modal = document.getElementById("modal-video-presenter");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  const iframe = document.getElementById("video-presenter-iframe");
+  if (iframe && (!iframe.src || iframe.src === "about:blank")) {
+    iframe.src = "https://app.heygen.com/embeds/948dcc55193f4edf81214188e7bed41e";
+  }
+}
