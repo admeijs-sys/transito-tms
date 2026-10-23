@@ -1,0 +1,56 @@
+================================================================================
+TRANSITO TMS & SDI - HEYGEN PRESENTATIEVIDEO SCRIPT (4 SCÈNES)
+================================================================================
+Doel: Complete toelichting van de bedrijfsopzet, Python-architectuur en tools
+Avatar: Ad van der Meijs
+Formaat: 16:9 Landscape (1920x1080)
+Bijbehorende dia's: Slide_1 tot en met Slide_4 (.png)
+================================================================================
+
+[SCÈNE 1: BEDRIJFSMODEL & ITALIË]
+Dia-achtergrond: Slide_1_Bedrijfsmodel.png
+Duur: ca. 45 seconden
+Plaatsing avatar: Rechtsonder op de aangegeven positie
+
+Tekst voor spraaksynthese (plakken in HeyGen bij Scène 1):
+"Welkom bij Transito TMS. In deze video geef ik een overzicht van de opbouw en architectuur van ons systeem. Onze onderneming is gevestigd in Italië en treedt op als transportintermediair namens een vast partner-transportbedrijf. Wij hebben géén eigen vrachtwagens, maar verzorgen de complete vrachtbemiddeling en acquisitie. De transporteur rijdt de fysieke vracht en factureert direct aan de verlader. Wij brengen onze bemiddelingscommissie in rekening bij de transporteur via het officiële Italiaanse SDI-facturatiesysteem, conform de btw-vrijstelling van Artikel 7-ter of Artikel 9."
+
+--------------------------------------------------------------------------------
+
+[SCÈNE 2: ZERO-EXTERNAL-PIP ARCHITECTUUR]
+Dia-achtergrond: Slide_2_Architectuur.png
+Duur: ca. 45 seconden
+Plaatsing avatar: Rechtsonder op de aangegeven positie
+
+Tekst voor spraaksynthese (plakken in HeyGen bij Scène 2):
+"De technische architectuur is uniek: de complete backend draait op pure Python Standard Library zonder zware externe pip-pakketten. Dit zorgt voor maximale stabiliteit, nul onderhoudsgevoeligheid en razendsnelle reactietijden. Gegevens worden 100% veilig op de eigen computer bewaard in een lokale SQLite-database, terwijl Cloudflare Tunnels zorgen voor een wereldwijde, versleutelde HTTPS-verbinding naar smartphones zonder poorten in de router open te zetten."
+
+--------------------------------------------------------------------------------
+
+[SCÈNE 3: FACTURATIE & ITALIAANSE BOEKHOUDING]
+Dia-achtergrond: Slide_3_SDI_Boekhouding.png
+Duur: ca. 45 seconden
+Plaatsing avatar: Rechtsonder op de aangegeven positie
+
+Tekst voor spraaksynthese (plakken in HeyGen bij Scène 3):
+"Het systeem dekt de gehele administratieve cyclus: van het maken van vrachtoffertes tot het bundelen van voltooide ritten op één maandelijkse commissiefactuur. De facturen worden direct gegenereerd in FatturaPA FPR12 XML voor het SDI, inclusief wettelijk Registro IVA Vendite, Acquisti, en automatische winst- en verliesberekening conform de Italiaanse OIC-standaarden."
+
+--------------------------------------------------------------------------------
+
+[SCÈNE 4: MOBIELE PWA APP & AFSLUITING]
+Dia-achtergrond: Slide_4_Mobiel_PWA.png
+Duur: ca. 35 seconden
+Plaatsing avatar: Rechtsonder op de aangegeven positie
+
+Tekst voor spraaksynthese (plakken in HeyGen bij Scène 4):
+"Dankzij de Progressive Web App kunnen we onderweg direct vanaf de smartphone ritten aanmaken, offertes downloaden en facturen versturen. Onze vrachtoffertes worden automatisch gemaild met een officiële PDF én een ingebouwde persoonlijke videotoelichting. Transito TMS combineert zo maximale fiscale compliance met ultieme operationele snelheid. Bedankt voor uw aandacht!"
+
+================================================================================
+STAPPEN IN HEYGEN:
+1. Open https://app.heygen.com en kies 'Create Video' -> Landscape (16:9).
+2. Voeg 4 scènes toe (+ knop onderaan).
+3. Upload per scène de bijbehorende afbeelding (Slide_1 t/m Slide_4) als achtergrond.
+4. Voeg uw Avatar van Ad van der Meijs toe aan elke scène (rechtsonder geplaatst).
+5. Plak per scène de bijbehorende tekst uit dit document.
+6. Klik op 'Generate' om de complete presentatievideo te downloaden als MP4!
+================================================================================
