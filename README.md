@@ -64,13 +64,16 @@ In dit model voert jouw Italiaanse onderneming **zelf géén fysieke transporten
 ## 🚀 Starten
 
 ### Windows
-Dubbelklik op:
+Dubbelklik simpelweg op:
 ```cmd
 start.bat
 ```
-Of via PowerShell:
-```powershell
-python server.py
-```
+*(Of `start_online.bat`)*
+
+Dit start automatisch:
+1. De centrale Transito backend & SQLite database op je computer (`http://127.0.0.1:8080`).
+2. De beveiligde HTTPS Cloudflare tunnel (`cloudflared`) waarmee je mobiele smartphone **overal ter wereld (ook via 4G/5G)** direct verbinding heeft zonder router-instellingen of firewall-blokkades.
+3. Opent direct het kantoor-dashboard in je browser.
+
 - **Kantoor TMS (PC)**: [http://127.0.0.1:8080](http://127.0.0.1:8080)
-- **Mobiele App (Telefoon)**: [http://192.168.68.104:8080/mobile](http://192.168.68.104:8080/mobile) (of scan de QR-code rechtsboven in het scherm).
+- **Mobiele App (Smartphone)**: Klik rechtsboven in het scherm op het mobiel-icoon om de actuele QR-code te scannen met de camera van je telefoon!

@@ -233,6 +233,7 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
 
         elif path == "/api/network-info":
             import socket
+            import subprocess
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
                 s.connect(('8.8.8.8', 80))
@@ -242,12 +243,31 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
             finally:
                 s.close()
 
+            # Controleer of cloudflared.exe daadwerkelijk actief draait
+            is_cf_running = False
+            try:
+                cf_check = subprocess.check_output(
+                    'tasklist /FI "IMAGENAME eq cloudflared.exe" /NH',
+                    shell=True,
+                    text=True,
+                    stderr=subprocess.DEVNULL
+                )
+                is_cf_running = "cloudflared.exe" in cf_check
+            except Exception:
+                is_cf_running = False
+
             tunnel_url = ""
             tunnel_file = os.path.join(BASE_DIR, "tunnel_url.txt")
-            if os.path.exists(tunnel_file):
+            if is_cf_running and os.path.exists(tunnel_file):
                 try:
                     with open(tunnel_file, "r", encoding="utf-8") as tf:
                         tunnel_url = tf.read().strip()
+                except Exception:
+                    tunnel_url = ""
+            elif not is_cf_running and os.path.exists(tunnel_file):
+                # Verwijder verouderde tunnel link als cloudflared niet meer draait
+                try:
+                    os.remove(tunnel_file)
                 except Exception:
                     pass
 
@@ -256,6 +276,7 @@ class TransitoAPIHandler(http.server.SimpleHTTPRequestHandler):
                 "ip": local_ip,
                 "port": PORT,
                 "tunnel_url": tunnel_url,
+                "is_tunnel_active": bool(tunnel_url),
                 "mobile_url": effective_mobile_url,
                 "local_mobile_url": f"http://{local_ip}:{PORT}/mobile"
             })

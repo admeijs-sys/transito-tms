@@ -2099,28 +2099,72 @@ function openNewPartyModal() {
   document.getElementById("modal-new-party").classList.remove("hidden");
 }
 
+let currentActiveMobileUrl = "";
+
 async function openMobileAppModal() {
   const qrImg = document.getElementById("mobile-qr-code");
   const urlDisplay = document.getElementById("mobile-url-display");
+  const statusBadge = document.getElementById("mobile-status-badge");
+  const tunnelHint = document.getElementById("mobile-tunnel-hint");
+  const copyBtn = document.getElementById("copy-mobile-btn");
+
+  if (copyBtn) {
+    copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Kopiëren';
+  }
+
+  document.getElementById("modal-mobile-app").classList.remove("hidden");
 
   // Bepaal mobiele URL via actieve tunnel of lokaal netwerk
   let mobileUrl = `${window.location.origin}/mobile`;
+  let isTunnel = false;
+
   try {
     const res = await fetch(`${API_BASE}/network-info`);
     const info = await res.json();
-    if (info.mobile_url) mobileUrl = info.mobile_url;
+    if (info.mobile_url) {
+      mobileUrl = info.mobile_url;
+    }
+    isTunnel = Boolean(info.is_tunnel_active && info.tunnel_url);
   } catch (err) {
     console.warn("Kon netwerk info niet automatisch ophalen:", err);
   }
 
+  currentActiveMobileUrl = mobileUrl;
+
+  if (statusBadge) {
+    if (isTunnel) {
+      statusBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 mb-2";
+      statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Wereldwijd Online (HTTPS & 4G/5G)';
+      if (tunnelHint) tunnelHint.classList.add("hidden");
+    } else {
+      statusBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 mb-2";
+      statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Lokaal Wi-Fi Netwerk';
+      if (tunnelHint) tunnelHint.classList.remove("hidden");
+    }
+  }
+
   if (qrImg) {
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mobileUrl)}`;
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(mobileUrl)}`;
   }
   if (urlDisplay) {
     urlDisplay.textContent = mobileUrl;
     urlDisplay.href = mobileUrl;
   }
-  document.getElementById("modal-mobile-app").classList.remove("hidden");
+}
+
+function copyMobileUrl() {
+  if (!currentActiveMobileUrl) return;
+  navigator.clipboard.writeText(currentActiveMobileUrl).then(() => {
+    const copyBtn = document.getElementById("copy-mobile-btn");
+    if (copyBtn) {
+      copyBtn.innerHTML = '<i class="fa-solid fa-check text-emerald-300"></i> Gekopieerd!';
+      setTimeout(() => {
+        copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Kopiëren';
+      }, 2500);
+    }
+  }).catch(err => {
+    prompt("Kopieer deze link:", currentActiveMobileUrl);
+  });
 }
 
 function closeModal(modalId) {
