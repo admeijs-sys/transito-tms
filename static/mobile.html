@@ -41,17 +41,18 @@
       background-size: 1.25em 1.25em;
       padding-right: 2.25rem !important;
     }
-    /* Dynamic Island en Notch spatiëring (iPhone 15 Plus) */
+    /* Dynamic Island en Notch spatiëring (iPhone 15 Plus 430px) */
     .safe-top {
-      padding-top: max(env(safe-area-inset-top, 0px), 16px);
+      padding-top: max(env(safe-area-inset-top, 0px), 50px);
     }
-    /* iOS Home Swipe Bar spatiëring */
+    /* iOS Home Swipe Bar spatiëring (iPhone 15 Plus) */
     .safe-bottom {
-      padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 28px);
     }
     .mobile-tab-btn {
-      min-height: 48px;
-      min-width: 68px;
+      min-height: 50px;
+      min-width: 72px;
+      touch-action: manipulation;
     }
     .mobile-tab-btn.active {
       color: #2563eb;
@@ -102,14 +103,14 @@
 
     <!-- ================= VIEW 0: MOBIEL DASHBOARD ================= -->
     <section id="view-dashboard" class="space-y-4">
-      <!-- Snelle Acties Knoppen -->
-      <div class="grid grid-cols-2 gap-2.5">
-        <button onclick="switchMobileView('view-new-order')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold p-3.5 rounded-2xl shadow-sm text-xs flex items-center justify-center gap-2 transition">
-          <i class="fa-solid fa-plus-circle text-sm"></i>
+      <!-- Snelle Acties Knoppen (iPhone 15 Plus Touch Targets) -->
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="switchMobileView('view-new-order')" class="bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold p-4 rounded-2xl shadow-sm text-sm flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-plus-circle text-base"></i>
           <span>Nieuwe Rit</span>
         </button>
-        <button onclick="switchMobileView('view-orders-list')" class="bg-white hover:bg-slate-50 active:scale-95 text-slate-700 border border-slate-300 font-bold p-3.5 rounded-2xl shadow-sm text-xs flex items-center justify-center gap-2 transition">
-          <i class="fa-solid fa-list-check text-blue-600 text-sm"></i>
+        <button onclick="switchMobileView('view-orders-list')" class="bg-white hover:bg-slate-50 active:scale-[0.97] text-slate-800 border border-slate-300 font-bold p-4 rounded-2xl shadow-sm text-sm flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-list-check text-blue-600 text-base"></i>
           <span>Alle Ritten</span>
         </button>
       </div>
@@ -306,14 +307,14 @@
             </div>
           </div>
 
-          <!-- Submit Buttons: Offerte & Direct Aanmelden -->
-          <div class="grid grid-cols-2 gap-2.5 pt-1">
-            <button type="button" id="mob-btn-submit-offerte" onclick="submitMobileOrderAs('Offerte')" class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.97] text-white font-bold py-3.5 px-2 rounded-xl shadow-md text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-              <i class="fa-solid fa-file-contract text-xs pointer-events-none"></i>
+          <!-- Submit Buttons: Offerte & Direct Aanmelden (iPhone 15 Plus) -->
+          <div class="grid grid-cols-2 gap-3 pt-2">
+            <button type="button" id="mob-btn-submit-offerte" onclick="submitMobileOrderAs('Offerte')" class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.97] text-white font-bold py-3.5 px-3 rounded-2xl shadow-md text-sm flex items-center justify-center gap-2 transition cursor-pointer">
+              <i class="fa-solid fa-file-contract pointer-events-none"></i>
               <span class="pointer-events-none">Als Offerte</span>
             </button>
-            <button type="button" id="mob-btn-submit-order" onclick="submitMobileOrderAs('Aangemeld')" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold py-3.5 px-2 rounded-xl shadow-md text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-              <i class="fa-solid fa-paper-plane text-xs pointer-events-none"></i>
+            <button type="button" id="mob-btn-submit-order" onclick="submitMobileOrderAs('Aangemeld')" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold py-3.5 px-3 rounded-2xl shadow-md text-sm flex items-center justify-center gap-2 transition cursor-pointer">
+              <i class="fa-solid fa-paper-plane pointer-events-none"></i>
               <span class="pointer-events-none">Rit Aanmelden</span>
             </button>
           </div>
@@ -362,7 +363,7 @@
             <input type="text" id="mob-new-city" placeholder="Stad" class="w-full p-2.5 border border-slate-300 rounded-xl text-sm">
           </div>
 
-          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3 rounded-xl shadow text-sm mt-2">
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold py-3.5 rounded-2xl shadow-md text-sm mt-3 cursor-pointer transition">
             Verlader Opslaan
           </button>
         </form>
@@ -391,18 +392,20 @@
     </button>
   </nav>
 
-  <!-- Mobile Toast Notification -->
-  <div id="mob-toast" class="fixed top-20 left-4 right-4 z-50 transform -translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+  <!-- Mobile Toast Notification (Onder Dynamic Island) -->
+  <div id="mob-toast" class="fixed top-[calc(env(safe-area-inset-top,0px)+16px)] left-4 right-4 max-w-[400px] mx-auto z-50 transform -translate-y-28 opacity-0 transition-all duration-300 pointer-events-none">
     <div id="mob-toast-content" class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-medium flex items-center gap-2.5 border border-slate-700">
       <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
       <span id="mob-toast-text">Melding</span>
     </div>
   </div>
 
-  <!-- Mobile Offerte Viewer Modal -->
+  <!-- Mobile Offerte Viewer Modal (iOS Bottom Sheet Style) -->
   <div id="modal-mob-quote" onclick="if(event.target === this) closeMobileQuoteModal()" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
-      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+    <div class="bg-white w-full max-w-[430px] rounded-t-[32px] sm:rounded-3xl max-h-[92dvh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+      <!-- iOS Drag Indicator -->
+      <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2 shrink-0"></div>
+      <div class="px-5 py-3 bg-slate-900 text-white flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2.5">
           <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
             <i class="fa-solid fa-file-contract"></i>
@@ -467,21 +470,21 @@
           <div class="text-xl font-black font-mono text-amber-800" id="mob-quote-price">€ 0,00</div>
         </div>
 
-        <!-- Actieknoppen -->
-        <div class="space-y-2 pt-2">
-          <a id="mob-btn-download-pdf" href="#" download class="w-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 transition cursor-pointer">
+        <!-- Actieknoppen (iPhone 15 Plus Tap Targets) -->
+        <div class="space-y-2.5 pt-2">
+          <a id="mob-btn-download-pdf" href="#" download class="w-full bg-amber-600 hover:bg-amber-700 active:scale-[0.97] text-white font-bold py-3.5 px-4 rounded-2xl shadow-sm text-sm flex items-center justify-center gap-2 transition cursor-pointer">
             <i class="fa-solid fa-file-pdf"></i>
             <span>Download Offerte A4 PDF</span>
           </a>
-          <button id="mob-btn-email-quote" onclick="sendMobileQuoteToMyEmail()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 transition cursor-pointer">
+          <button id="mob-btn-email-quote" onclick="sendMobileQuoteToMyEmail()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-[0.97] text-white font-bold py-3.5 px-4 rounded-2xl shadow-sm text-sm flex items-center justify-center gap-2 transition cursor-pointer">
             <i class="fa-solid fa-paper-plane"></i>
             <span>Direct naar mijn e-mail (admeijs@gmail.com)</span>
           </button>
-          <button id="mob-btn-accept-quote" onclick="acceptMobileQuote()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs flex items-center justify-center gap-2 transition cursor-pointer">
+          <button id="mob-btn-accept-quote" onclick="acceptMobileQuote()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white font-bold py-3.5 px-4 rounded-2xl shadow-sm text-sm flex items-center justify-center gap-2 transition cursor-pointer">
             <i class="fa-solid fa-check"></i>
             <span>Offerte Accepteren &amp; Rit Aanmelden</span>
           </button>
-          <button onclick="shareMobileQuote()" class="w-full bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow text-xs flex items-center justify-center gap-2 transition cursor-pointer">
+          <button onclick="shareMobileQuote()" class="w-full bg-slate-800 hover:bg-slate-900 active:scale-[0.97] text-white font-bold py-3.5 px-4 rounded-2xl shadow-sm text-sm flex items-center justify-center gap-2 transition cursor-pointer">
             <i class="fa-solid fa-share-nodes"></i>
             <span>Offerte Delen / Versturen</span>
           </button>
