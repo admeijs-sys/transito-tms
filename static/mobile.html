@@ -24,13 +24,14 @@
       min-height: 100dvh;
       position: relative;
       touch-action: manipulation;
+      overscroll-behavior-y: contain; /* Voorkomt per ongeluk herladen bij omlaag vegen in Chrome iOS */
       background-color: #f8fafc;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
       -webkit-font-smoothing: antialiased;
     }
-    /* iOS Safari en iPhone optimalisaties */
+    /* iOS Chrome en Safari invoervelden optimalisatie */
     input, select, textarea {
-      font-size: 16px !important;
+      font-size: 16px !important; /* Voorkomt auto-zoom in Chrome/Safari iOS */
       -webkit-appearance: none;
       border-radius: 0.85rem;
     }
@@ -41,17 +42,17 @@
       background-size: 1.25em 1.25em;
       padding-right: 2.25rem !important;
     }
-    /* Dynamic Island en Notch spatiëring (iPhone 15 Plus 430px) */
+    /* Dynamic Island en Chrome iOS Top Bar spatiëring */
     .safe-top {
-      padding-top: max(env(safe-area-inset-top, 0px), 50px);
+      padding-top: max(env(safe-area-inset-top, 0px), 14px);
     }
-    /* iOS Home Swipe Bar spatiëring (iPhone 15 Plus) */
+    /* Chrome iOS Toolbar & Home Bar spatiëring */
     .safe-bottom {
-      padding-bottom: max(env(safe-area-inset-bottom, 0px), 28px);
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
     }
     .mobile-tab-btn {
-      min-height: 50px;
-      min-width: 72px;
+      min-height: 48px;
+      min-width: 70px;
       touch-action: manipulation;
     }
     .mobile-tab-btn.active {
