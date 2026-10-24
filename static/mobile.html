@@ -42,13 +42,14 @@
       background-size: 1.25em 1.25em;
       padding-right: 2.25rem !important;
     }
-    /* Dynamic Island en Chrome iOS Top Bar spatiëring */
-    .safe-top {
-      padding-top: max(env(safe-area-inset-top, 0px), 14px);
+    /* Dynamic Island en Camera spatiëring (iPhone 15 Plus) */
+    header.safe-top {
+      padding-top: max(env(safe-area-inset-top, 0px), 60px) !important;
+      padding-bottom: 12px !important;
     }
     /* Chrome iOS Toolbar & Home Bar spatiëring */
     .safe-bottom {
-      padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px) !important;
     }
     .mobile-tab-btn {
       min-height: 48px;
@@ -76,8 +77,8 @@
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-[100dvh] flex flex-col justify-between selection:bg-blue-500 selection:text-white">
 
-  <!-- Mobile Top Bar -->
-  <header class="bg-blue-600 text-white px-3.5 sm:px-4 py-3 sticky top-0 z-40 shadow-md flex items-center justify-between safe-top">
+  <!-- Mobile Top Bar (iPhone 15 Plus Camera & Dynamic Island Safe) -->
+  <header class="bg-blue-600 text-white px-4 sticky top-0 z-40 shadow-md flex items-center justify-between safe-top">
     <div class="flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white text-sm shadow shrink-0">
         <i class="fa-solid fa-handshake"></i>
@@ -393,8 +394,8 @@
     </button>
   </nav>
 
-  <!-- Mobile Toast Notification (Onder Dynamic Island) -->
-  <div id="mob-toast" class="fixed top-[calc(env(safe-area-inset-top,0px)+16px)] left-4 right-4 max-w-[400px] mx-auto z-50 transform -translate-y-28 opacity-0 transition-all duration-300 pointer-events-none">
+  <!-- Mobile Toast Notification (Onder Header & Dynamic Island) -->
+  <div id="mob-toast" class="fixed top-24 left-4 right-4 max-w-[400px] mx-auto z-50 transform -translate-y-36 opacity-0 transition-all duration-300 pointer-events-none">
     <div id="mob-toast-content" class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-medium flex items-center gap-2.5 border border-slate-700">
       <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
       <span id="mob-toast-text">Melding</span>
